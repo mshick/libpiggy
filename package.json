@@ -1,0 +1,59 @@
+{
+  "name": "libpiggy",
+  "version": "0.1.0",
+  "author": "Michael Shick <m@shick.us>",
+  "license": "MIT",
+  "description": "Use a PostgreSQL database like a JSON document store.",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "babel src -d dist -s",
+    "prepublish": "npm run test && npm run build",
+    "test": "ava"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mshick/libpiggy.git"
+  },
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "keywords": [
+    "hapi",
+    "postgresql",
+    "postgres",
+    "keyval",
+    "keystore",
+    "upsert",
+    "set",
+    "database",
+    "query"
+  ],
+  "bugs": {
+    "url": "https://github.com/mshick/libpiggy/issues"
+  },
+  "homepage": "https://github.com/mshick/libpiggy#readme",
+  "ava": {
+    "babel": "inherit",
+    "require": [
+      "babel-register"
+    ]
+  },
+  "dependencies": {
+    "hoek": "^4.1.1",
+    "lodash": "^4.17.4",
+    "pg": "^6.1.5",
+    "qs": "^6.4.0",
+    "shortid": "^2.2.8"
+  },
+  "devDependencies": {
+    "ava": "^0.19.1",
+    "babel-cli": "^6.24.1",
+    "babel-plugin-source-map-support": "^0.0.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.4.0",
+    "babel-preset-stage-1": "^6.24.1",
+    "babel-register": "^6.24.1",
+    "eslint": "^3.19.0",
+    "eslint-config-xo-space": "^0.16.0"
+  }
+}
