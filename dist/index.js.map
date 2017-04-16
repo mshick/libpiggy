@@ -1,1 +1,0 @@
-{"version":3,"sources":["../src/index.js"],"names":["default"],"mappings":";;;;;;;;;;;wCAAQA,O;;;;;;;;;wCACAA,O;;;;;;;;;2CACAA,O;;;;;;;;;wCACAA,O","file":"index.js","sourcesContent":["export {default as get} from './get';\nexport {default as set} from './set';\nexport {default as upsert} from './upsert';\nexport {default as del} from './del';\n"]}
