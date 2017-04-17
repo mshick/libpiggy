@@ -3,11 +3,5 @@
     ["env", {"targets": {"node": "current"}}],
     "stage-1"
   ],
-  "sourceMaps": "both",
-  "plugins": ["transform-runtime"],
-  "env": {
-    "production": {
-      "plugins": ["source-map-support"]
-    }
-  }
+  "plugins": ["transform-runtime"]
 }
