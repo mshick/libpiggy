@@ -24,28 +24,40 @@ const urlToConfig = function (connectionUrl) {
   };
 };
 
-const createConnection = function (userOptions, plugin) {
-  const {options: pluginOptions, state: pluginState} = plugin;
-  const options = applyToDefaults(pluginOptions, userOptions || {});
+const createConnection = async function (options, globals) {
+  try {
+    const settings = applyToDefaults(globals.options, options || {});
 
-  const {
-    url: connectionUrl,
-    connectionName,
-    connection: connectionOptions
-  } = options;
+    const {
+      url: connectionUrl,
+      connectionName,
+      connection: connectionConfig
+    } = settings;
 
-  const {_openPools} = pluginState;
+    const {_openPools, _openClients} = globals.state;
 
-  if (!_openPools[connectionName]) {
-    const connectionConfig = urlToConfig(connectionUrl);
-    const config = applyToDefaults(connectionConfig, connectionOptions);
-    _openPools[connectionName] = new pg.Pool(config);
+    if (!_openPools[connectionName]) {
+      const urlConfig = urlToConfig(connectionUrl);
+      const config = applyToDefaults(urlConfig, connectionConfig);
+      _openPools[connectionName] = new pg.Pool(config);
+    }
+
+    const client = await _openPools[connectionName].connect();
+
+    _openClients.push(client);
+
+    client.close = () => {
+      const clientIndex = _openClients.indexOf(client);
+      if (clientIndex > -1) {
+        _openClients.splice(clientIndex, 1);
+      }
+      client.release();
+    };
+
+    return client;
+  } catch (error) {
+    throw error;
   }
-
-  return _openPools[connectionName].connect()
-    .then(client => {
-      return {client};
-    });
 };
 
 export default createConnection;

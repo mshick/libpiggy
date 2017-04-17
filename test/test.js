@@ -38,9 +38,7 @@ const FIXTURES = [
 ];
 
 test(async t => {
-  const connection = await createConnection(null, {state: STATE, options: DEFAULTS});
-
-  const {client} = connection;
+  const client = await createConnection(null, {state: STATE, options: DEFAULTS});
 
   await createStore({
     client,
@@ -110,7 +108,7 @@ test(async t => {
 
   await client.query(`DROP TABLE ${TABLE_NAME}`);
 
-  await client.release();
+  client.close();
 
   t.deepEqual(got1.val, FIXTURES[2]);
   t.deepEqual(got2.val, FIXTURES[1]);
