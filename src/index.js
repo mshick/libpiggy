@@ -9,3 +9,4 @@ export {default as createStore} from './create-store';
 export {default as createWatchedTable} from './create-watched-table';
 export {default as tableExists} from './table-exists';
 export {default as watchTable} from './watch-table';
+export {default as getTableColumns} from './get-table-columns';
