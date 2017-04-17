@@ -1,4 +1,4 @@
-export {default as find} from './find';
+export {default as mget} from './mget';
 export {default as get} from './get';
 export {default as set} from './set';
 export {default as upsert} from './upsert';

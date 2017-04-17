@@ -1,10 +1,10 @@
-import find from './find';
+import mget from './mget';
 
 const get = async function ({client, table, key, options}) {
   options = options || {};
 
   try {
-    const found = await find({
+    const got = await mget({
       client,
       table,
       key,
@@ -14,25 +14,24 @@ const get = async function ({client, table, key, options}) {
       }
     });
 
-    if (found.error) {
-      throw found.error;
+    if (got.error) {
+      throw got.error;
     }
 
-    const {results, rows} = found;
-
-    let foundKey;
-    let foundVal;
+    const {results, rows} = got;
 
     if (rows && rows[0]) {
-      foundKey = rows[0].key;
-      foundVal = rows[0].val;
+      return {
+        client,
+        results,
+        key: rows[0].key,
+        val: rows[0].val
+      };
     }
 
     return {
       client,
-      results,
-      key: foundKey,
-      val: foundVal
+      results
     };
   } catch (error) {
     return {

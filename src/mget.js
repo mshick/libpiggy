@@ -20,7 +20,7 @@ const getQueryTextBtree = function ({table, key}) {
   return `SELECT * FROM ${table} WHERE ${wheres.join(' AND ')}`;
 };
 
-const find = async function ({client, table, key, options}) {
+const mget = async function ({client, table, key, options}) {
   const {indexType, limit} = applyToDefaults(defaults, options || {});
 
   try {
@@ -54,4 +54,4 @@ const find = async function ({client, table, key, options}) {
   }
 };
 
-export default find;
+export default mget;
