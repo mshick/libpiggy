@@ -34,22 +34,22 @@ const createConnection = async function (options, globals) {
       connection: connectionConfig
     } = settings;
 
-    const {_openPools, _openClients} = globals.state;
+    const {openPools, openClients} = globals.state;
 
-    if (!_openPools[connectionName]) {
+    if (!openPools[connectionName]) {
       const urlConfig = urlToConfig(connectionUrl);
       const config = applyToDefaults(urlConfig, connectionConfig);
-      _openPools[connectionName] = new pg.Pool(config);
+      openPools[connectionName] = new pg.Pool(config);
     }
 
-    const client = await _openPools[connectionName].connect();
+    const client = await openPools[connectionName].connect();
 
-    _openClients.push(client);
+    openClients.push(client);
 
     client.close = () => {
-      const clientIndex = _openClients.indexOf(client);
+      const clientIndex = openClients.indexOf(client);
       if (clientIndex > -1) {
-        _openClients.splice(clientIndex, 1);
+        openClients.splice(clientIndex, 1);
       }
       client.release();
     };
