@@ -7,7 +7,7 @@
   "main": "lib/index.js",
   "jsnext:main": "src/index.js",
   "scripts": {
-    "build": "babel src -d lib",
+    "build": "rimraf lib && babel src -d lib",
     "prepublish": "npm run build",
     "lint": "eslint src",
     "test": "ava"
