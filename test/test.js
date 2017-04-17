@@ -1,7 +1,7 @@
 import test from 'ava';
 import createConnection from '../src/create-connection';
 import createStore from '../src/create-store';
-import closePools from '../src/close-pools';
+import closeConnection from '../src/close-connection';
 import upsert from '../src/upsert';
 import get from '../src/get';
 
@@ -111,7 +111,7 @@ test(async t => {
 
   client.close();
 
-  await closePools({state: STATE});
+  await closeConnection(null, {state: STATE});
 
   t.deepEqual(got1.val, FIXTURES[2]);
   t.deepEqual(got2.val, FIXTURES[1]);
