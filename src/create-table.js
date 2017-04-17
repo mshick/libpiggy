@@ -1,15 +1,21 @@
-const createTable = function ({client, table, columns}) {
-  const text = `
-    CREATE TABLE IF NOT EXISTS ${table} (${columns});
-  `;
+const createTable = async function ({client, table, columns}) {
+  try {
+    const text = `
+      CREATE TABLE IF NOT EXISTS ${table} (${columns});
+    `;
 
-  return client.query({text})
-  .then(results => {
+    const results = await client.query({text});
+
     return {
       client,
       results
     };
-  });
+  } catch (error) {
+    return {
+      client,
+      error
+    };
+  }
 };
 
 export default createTable;

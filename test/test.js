@@ -33,7 +33,8 @@ const STATE = {
 const FIXTURES = [
   {firstName: 'Cool', lastName: 'Foo', car: 'Prius', age: 16},
   {firstName: 'Little', lastName: 'Guy', car: 'Rari', age: 21},
-  {firstName: 'BIG', lastName: 'Guy', car: 'Lambo', age: 22}
+  {firstName: 'BIG', lastName: 'Guy', car: 'Lambo', age: 22},
+  {firstName: 'King', lastName: 'Kong', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
 test(async t => {
@@ -44,14 +45,18 @@ test(async t => {
   await createStore({
     client,
     table: TABLE_NAME,
-    indexes: ['lastName', 'car', ['age', 'int']]
+    index: true,
+    options: {
+      btreeIndex: {
+        fields: [['age', 'integer']]
+      }
+    }
   });
 
   await upsert({
     client,
     table: TABLE_NAME,
     val: FIXTURES[0],
-    options: {merge: true},
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
@@ -59,7 +64,6 @@ test(async t => {
     client,
     table: TABLE_NAME,
     val: FIXTURES[1],
-    options: {merge: true},
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
@@ -67,7 +71,13 @@ test(async t => {
     client,
     table: TABLE_NAME,
     val: FIXTURES[2],
-    options: {merge: true},
+    generateKeyFn: () => getRandomInt(1000, 1000000)
+  });
+
+  await upsert({
+    client,
+    table: TABLE_NAME,
+    val: FIXTURES[3],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
@@ -80,15 +90,29 @@ test(async t => {
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
-  const got = await get({
+  const got1 = await get({
     client,
     table: TABLE_NAME,
-    key: {car: 'Lambo', age: 22}
+    key: {car: 'Lambo'}
+  });
+
+  const got2 = await get({
+    client,
+    table: TABLE_NAME,
+    key: {age: 21}
+  });
+
+  const got3 = await get({
+    client,
+    table: TABLE_NAME,
+    key: {nested: {foo: 'bar'}}
   });
 
   await client.query(`DROP TABLE ${TABLE_NAME}`);
 
   await client.release();
 
-  t.deepEqual(got.val, FIXTURES[2]);
+  t.deepEqual(got1.val, FIXTURES[2]);
+  t.deepEqual(got2.val, FIXTURES[1]);
+  t.deepEqual(got3.val, FIXTURES[3]);
 });

@@ -1,25 +1,32 @@
-const createNotifyTrigger = function ({client, key}) {
-  return client.query({
-    text: `
+const createNotifyTrigger = async function ({client, key}) {
+  try {
+    const text = `
       CREATE OR REPLACE FUNCTION notify_trigger()
       RETURNS TRIGGER AS
       $body$
       DECLARE
       BEGIN
-        PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&pkey=' || NEW.${key} );
+        PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&pkey=' || NEW.${key});
         RETURN NEW;
       END;
       $body$
       LANGUAGE plpgsql;
-    `
-  })
-  .then(() => client.query(`LISTEN watchers`))
-  .then(results => {
+    `;
+
+    const results = await client.query({text});
+
+    await client.query(`LISTEN watchers`);
+
     return {
       client,
       results
     };
-  });
+  } catch (error) {
+    return {
+      client,
+      error
+    };
+  }
 };
 
 export default createNotifyTrigger;

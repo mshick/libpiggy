@@ -1,3 +1,4 @@
+import ajv from 'ajv';
 import shortid from 'shortid';
 import {applyToDefaults} from 'hoek';
 import get from './get';
@@ -32,14 +33,19 @@ const upsert = async function ({
   key,
   val: newVal,
   options,
-  generateKeyFn
+  generateKeyFn,
+  schema
 }) {
   try {
     const {merge} = options || {};
 
     generateKeyFn = generateKeyFn || shortid.generate;
 
-    const got = await key && get({client, table, key});
+    let got;
+
+    if (key) {
+      got = await get({client, table, key});
+    }
 
     let existingKey;
     let existingVal;
@@ -47,9 +53,8 @@ const upsert = async function ({
     if (got) {
       existingKey = got.key;
       existingVal = got.val;
+      key = existingKey;
     }
-
-    key = existingKey || key;
 
     if (!key || typeof key !== 'string') {
       key = generateKeyFn();
@@ -57,6 +62,14 @@ const upsert = async function ({
 
     const text = getQueryText({table, key, existingKey});
     const val = getVal({existingVal, newVal, merge});
+
+    if (schema) {
+      const isValid = ajv.validate(schema, val);
+      if (!isValid) {
+        throw ajv.errors;
+      }
+    }
+
     const values = [val];
     const results = await client.query({text, values});
 
