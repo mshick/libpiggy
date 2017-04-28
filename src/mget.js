@@ -1,10 +1,11 @@
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
-import {applyToDefaults} from 'hoek';
 
 const defaults = {
   indexType: 'gin',
-  limit: 0
+  limit: 0,
+  orderBy: 'updated_at',
+  direction: 'desc'
 };
 
 const getQueryTextBtree = function ({table, key}) {
@@ -20,23 +21,37 @@ const getQueryTextBtree = function ({table, key}) {
   return `SELECT * FROM ${table} WHERE ${wheres.join(' AND ')}`;
 };
 
-const mget = async function ({client, table, key, options}) {
-  const {indexType, limit} = applyToDefaults(defaults, options || {});
+const mget = async function ({client, table, key, options = {}}) {
+  const settings = {
+    ...defaults,
+    ...options
+  };
+
+  const {indexType, limit, orderBy, direction} = settings;
 
   try {
     let text;
 
     if (isString(key)) {
-      text = `SELECT * FROM ${table} WHERE key = '${key}'`;
+      text = `SELECT * FROM ${table} WHERE key LIKE '${key}'`;
     } else if (indexType === 'btree') {
       text = getQueryTextBtree({table, key});
     } else {
       text = `SELECT * FROM ${table} WHERE val @> '${JSON.stringify(key)}'`;
     }
 
-    if (limit > 0) {
-      text += ` LIMIT ${limit};`;
+    if (orderBy) {
+      text += ` ORDER BY ${orderBy}`;
+      if (direction) {
+        text += ` ${direction}`;
+      }
     }
+
+    if (limit > 0) {
+      text += ` LIMIT ${limit}`;
+    }
+
+    text += `;`;
 
     const results = await client.query({text});
     const {rows} = results;

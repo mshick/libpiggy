@@ -95,11 +95,15 @@ test(async t => {
     key: {car: 'Lambo'}
   });
 
+  // console.log(got1.val);
+
   const got2 = await get({
     client,
     table: TABLE_NAME,
     key: {age: 21}
   });
+
+  // console.log(got2.val);
 
   const got3 = await get({
     client,
@@ -107,13 +111,15 @@ test(async t => {
     key: {nested: {foo: 'bar'}}
   });
 
+  // console.log(got3.val);
+
   await client.query(`DROP TABLE ${TABLE_NAME}`);
 
   client.close();
 
   await closeConnection(null, {state: STATE});
 
-  t.deepEqual(got1.val, FIXTURES[2]);
+  t.deepEqual(got1.val, Object.assign({}, FIXTURES[0], {car: 'Lambo'}));
   t.deepEqual(got2.val, FIXTURES[1]);
   t.deepEqual(got3.val, FIXTURES[3]);
 });

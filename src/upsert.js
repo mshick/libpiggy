@@ -6,9 +6,9 @@ const getQueryText = function ({table, key, existingKey}) {
   let text;
 
   if (existingKey) {
-    text = `UPDATE ${table} SET (val) = ($1) WHERE key = '${key}';`;
+    text = `UPDATE ${table} SET (val, updated_at) = ($1, current_timestamp) WHERE key = '${key}';`;
   } else {
-    text = `INSERT INTO ${table} (key, val) VALUES ('${key}', $1);`;
+    text = `INSERT INTO ${table} (key, val, created_at, updated_at) VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
   }
 
   return text;
@@ -42,7 +42,7 @@ const upsert = async function ({
     let got;
 
     if (key) {
-      got = await get({client, table, key});
+      got = await get({client, table, key, options});
     }
 
     let existingKey;
