@@ -8,10 +8,14 @@ const createNotifyFunction = async function ({client, key}) {
       BEGIN
         IF (TG_OP = 'INSERT') THEN
           PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&when=' || TG_WHEN || '&newkey=' || NEW.${key});
-        ELSE
+          RETURN NEW;
+        ELSIF (TG_OP = 'DELETE') THEN
+          PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&when=' || TG_WHEN || '&oldkey=' || OLD.${key});
+          RETURN OLD;
+        ELSIF (TG_OP = 'UPDATE') THEN
           PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&when=' || TG_WHEN || '&newkey=' || NEW.${key} || '&oldkey=' || OLD.${key});
+          RETURN NEW;
         END IF;
-        RETURN NEW;
       END;
       $body$
       LANGUAGE plpgsql;
