@@ -1,5 +1,6 @@
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
+import defaultsDeep from 'lodash/defaultsDeep';
 
 const defaults = {
   indexType: 'gin',
@@ -21,11 +22,8 @@ const getQueryTextBtree = function ({table, key}) {
   return `SELECT * FROM ${table} WHERE ${wheres.join(' AND ')}`;
 };
 
-const mget = async function ({client, table, key, options = {}}) {
-  const settings = {
-    ...defaults,
-    ...options
-  };
+const mget = async function ({client, table, key, options}) {
+  const settings = defaultsDeep({}, options, defaults);
 
   const {indexType, limit, orderBy, direction} = settings;
 

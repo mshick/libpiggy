@@ -61,14 +61,10 @@ const upsert = async function ({
     const text = getQueryText({table, key, existingKey});
     const val = getVal({existingVal, newVal, merge});
     const values = [val];
-    const results = await client.query({text, values});
 
-    return {
-      client,
-      results,
-      key,
-      val
-    };
+    await client.query({text, values});
+
+    return get({client, table, key, options});
   } catch (error) {
     return {
       client,
