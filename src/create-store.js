@@ -13,20 +13,28 @@ const defaults = {
   btreeIndex: false
 };
 
+const CREATED = 'CREATED';
+const EXISTS = 'EXISTS';
+const ERROR = 'ERROR';
+
 const createStore = async function ({client, table, index, options}) {
   const settings = defaultsDeep({}, options, defaults);
 
   const {watch, checkExists, ginIndex, btreeIndex} = settings;
 
   try {
+    let results;
+
     let exists = false;
 
     if (checkExists) {
-      const results = await tableExists({client, table});
-      exists = results;
+      const existsResults = await tableExists({client, table});
+      exists = existsResults.results;
     }
 
-    if (!exists) {
+    if (exists) {
+      results = EXISTS;
+    } else {
       const columns = 'key text primary key, val jsonb, created_at timestamp with time zone, updated_at timestamp with time zone';
 
       if (watch) {
@@ -38,12 +46,21 @@ const createStore = async function ({client, table, index, options}) {
       if (index) {
         await createStoreIndexes({client, table, ginIndex, btreeIndex});
       }
+
+      const checkResults = await tableExists({client, table});
+
+      if (checkResults.results) {
+        results = CREATED;
+      } else {
+        throw new Error('created table does not exist');
+      }
     }
 
-    return {client};
+    return {client, results};
   } catch (error) {
     return {
       client,
+      results: ERROR,
       error
     };
   }

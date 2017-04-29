@@ -41,7 +41,7 @@ const FIXTURES = [
 test(async t => {
   const client = await createConnection(null, {state: STATE, options: DEFAULTS});
 
-  await createStore({
+  const createResults = await createStore({
     client,
     table: TABLE_NAME,
     index: true,
@@ -51,6 +51,8 @@ test(async t => {
       }
     }
   });
+
+  t.is(createResults.results, 'CREATED');
 
   await upsert({
     client,
