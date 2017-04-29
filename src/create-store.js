@@ -7,6 +7,7 @@ import createStoreIndexes from './create-store-indexes';
 const defaults = {
   checkExists: false,
   watch: false,
+  watchWhen: false,
   ginIndex: {
     operator: 'jsonb_path_ops'
   },
@@ -20,7 +21,7 @@ const ERROR = 'ERROR';
 const createStore = async function ({client, table, index, options}) {
   const settings = defaultsDeep({}, options, defaults);
 
-  const {watch, checkExists, ginIndex, btreeIndex} = settings;
+  const {watch, watchWhen, checkExists, ginIndex, btreeIndex} = settings;
 
   try {
     let results;
@@ -38,7 +39,7 @@ const createStore = async function ({client, table, index, options}) {
       const columns = 'key text primary key, val jsonb, created_at timestamp with time zone, updated_at timestamp with time zone';
 
       if (watch) {
-        await createWatchedTable({client, table, columns, key: 'key'});
+        await createWatchedTable({client, table, columns, when: watchWhen, key: 'key'});
       } else {
         await createTable({client, table, columns});
       }

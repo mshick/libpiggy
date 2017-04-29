@@ -1,12 +1,16 @@
 const createNotifyTrigger = async function ({client, table, key}) {
   try {
     const text = `
-      CREATE OR REPLACE FUNCTION notify_trigger__${table}()
+      CREATE OR REPLACE FUNCTION notify__${table}()
       RETURNS TRIGGER AS
       $body$
       DECLARE
       BEGIN
-        PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || 'when=' || TG_WHEN || '&newkey=' || NEW.${key} || '&oldkey=' || OLD.${key});
+        IF (TG_OP = 'INSERT') THEN
+          PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || 'when=' || TG_WHEN || '&newkey=' || NEW.${key});
+        ELSE
+          PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || 'when=' || TG_WHEN || '&newkey=' || NEW.${key} || '&oldkey=' || OLD.${key});
+        END IF;
         RETURN NEW;
       END;
       $body$

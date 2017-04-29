@@ -41,17 +41,23 @@ const FIXTURES = [
 test(async t => {
   const client = await createConnection(null, {state: STATE, options: DEFAULTS});
 
-  const createResults = await createStore({
-    client,
-    table: TABLE_NAME,
-    index: true,
-    options: {
-      watch: true,
-      btreeIndex: {
-        fields: [['age', 'integer']]
+  let createResults;
+  try {
+    createResults = await createStore({
+      client,
+      table: TABLE_NAME,
+      index: true,
+      options: {
+        watch: true,
+        btreeIndex: {
+          fields: [['age', 'integer']]
+        }
       }
-    }
-  });
+    });
+  } catch (error) {
+    console.log(error);
+    t.fail();
+  }
 
   t.is(createResults.results, 'CREATED');
 
