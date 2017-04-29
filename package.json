@@ -1,6 +1,6 @@
 {
   "name": "libpiggy",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "author": "Michael Shick <m@shick.us>",
   "license": "MIT",
   "description": "Use a PostgreSQL database like a JSON document store.",
