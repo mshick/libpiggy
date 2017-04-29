@@ -1,38 +1,40 @@
 import createTable from './create-table';
-import createNotifyTrigger from './create-notify-trigger';
+import createNotifyFunction from './create-notify-function';
 
 const createWatchedTable = async function ({client, table, columns, when, key}) {
   try {
-    await createNotifyTrigger({client, table, key});
+    await createNotifyFunction({client, table, when, key});
 
     await createTable({client, table, columns});
 
-    let text = `
-      CREATE TRIGGER watched_table_trigger_after__${table}
+    const textBefore = `
+      CREATE TRIGGER watched_table_trigger_before__${table}
+      BEFORE INSERT OR UPDATE OR DELETE ON ${table}
+      FOR EACH ROW EXECUTE PROCEDURE notify__${table}();
     `;
 
+    const textAfter = `
+      CREATE TRIGGER watched_table_trigger_after__${table}
+      AFTER INSERT OR UPDATE OR DELETE ON ${table}
+      FOR EACH ROW EXECUTE PROCEDURE notify__${table}();
+    `;
+
+    let text;
+
     if (when && when === 'BEFORE') {
-      text += `
-        BEFORE INSERT OR UPDATE OR DELETE ON ${table}
-      `;
+      text = textBefore;
     }
 
     if (when && when === 'AFTER') {
-      text += `
-        AFTER INSERT OR UPDATE OR DELETE ON ${table}
-      `;
+      text = textAfter;
     }
 
     if (!when) {
-      text += `
-        BEFORE INSERT OR UPDATE OR DELETE ON ${table}
-        AFTER INSERT OR UPDATE OR DELETE ON ${table}
+      text = `
+        ${textBefore}
+        ${textAfter}
       `;
     }
-
-    text += `
-      FOR EACH ROW EXECUTE PROCEDURE notify__${table}();
-    `;
 
     const results = await client.query({text});
 

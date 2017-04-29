@@ -4,7 +4,7 @@ export {default as set} from './set';
 export {default as upsert} from './upsert';
 export {default as del} from './del';
 export {default as createConnection} from './create-connection';
-export {default as createNotifyTrigger} from './create-notify-trigger';
+export {default as createNotifyFunction} from './create-notify-function';
 export {default as createStore} from './create-store';
 export {default as createTable} from './create-table';
 export {default as createWatchedTable} from './create-watched-table';

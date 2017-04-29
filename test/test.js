@@ -59,7 +59,7 @@ test(async t => {
     t.fail();
   }
 
-  t.is(createResults.results, 'CREATED');
+  t.is(createResults.code, 'CREATED');
 
   await upsert({
     client,

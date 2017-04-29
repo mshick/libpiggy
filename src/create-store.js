@@ -25,23 +25,24 @@ const createStore = async function ({client, table, index, options}) {
 
   try {
     let results;
+    let code;
 
     let exists = false;
 
     if (checkExists) {
       const existsResults = await tableExists({client, table});
-      exists = existsResults.results;
+      exists = existsResults.exists;
     }
 
     if (exists) {
-      results = EXISTS;
+      code = EXISTS;
     } else {
       const columns = 'key text primary key, val jsonb, created_at timestamp with time zone, updated_at timestamp with time zone';
 
       if (watch) {
-        await createWatchedTable({client, table, columns, when: watchWhen, key: 'key'});
+        results = await createWatchedTable({client, table, columns, when: watchWhen, key: 'key'});
       } else {
-        await createTable({client, table, columns});
+        results = await createTable({client, table, columns});
       }
 
       if (index) {
@@ -51,17 +52,17 @@ const createStore = async function ({client, table, index, options}) {
       const checkResults = await tableExists({client, table});
 
       if (checkResults.results) {
-        results = CREATED;
+        code = CREATED;
       } else {
         throw new Error('created table does not exist');
       }
     }
 
-    return {client, results};
+    return {client, results, code};
   } catch (error) {
     return {
       client,
-      results: ERROR,
+      code: ERROR,
       error
     };
   }
