@@ -1,3 +1,4 @@
+import defaultsDeep from 'lodash/defaultsDeep';
 import createTable from './create-table';
 import createWatchedTable from './create-watched-table';
 import tableExists from './table-exists';
@@ -13,12 +14,7 @@ const defaults = {
 };
 
 const createStore = async function ({client, table, index, options}) {
-  options = options || {};
-
-  const settings = {
-    ...defaults,
-    ...options
-  };
+  const settings = defaultsDeep({}, options, defaults);
 
   const {watch, checkExists, ginIndex, btreeIndex} = settings;
 

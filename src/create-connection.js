@@ -1,5 +1,5 @@
 import url from 'url';
-import {applyToDefaults} from 'hoek';
+import defaultsDeep from 'lodash/defaultsDeep';
 
 let pg;
 
@@ -25,13 +25,8 @@ const urlToConfig = function (connectionUrl) {
 };
 
 const createConnection = async function (options, globals) {
-  options = options || {};
-
   try {
-    const settings = {
-      ...globals.options,
-      ...options
-    };
+    const settings = defaultsDeep({}, options, globals.options);
 
     const {
       url: connectionUrl,
@@ -43,8 +38,8 @@ const createConnection = async function (options, globals) {
 
     if (!openPools[connectionName]) {
       const urlConfig = urlToConfig(connectionUrl);
-      const config = applyToDefaults(urlConfig, connectionOptions, true);
-      openPools[connectionName] = new pg.Pool(config);
+      const poolConfig = defaultsDeep({}, connectionOptions, urlConfig);
+      openPools[connectionName] = new pg.Pool(poolConfig);
     }
 
     const client = await openPools[connectionName].connect();

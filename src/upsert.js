@@ -1,5 +1,5 @@
 import shortid from 'shortid';
-import {applyToDefaults} from 'hoek';
+import defaultsDeep from 'lodash/defaultsDeep';
 import get from './get';
 
 const getQueryText = function ({table, key, existingKey}) {
@@ -18,7 +18,7 @@ const getVal = function ({existingVal, newVal, merge}) {
   let val = {};
 
   if (merge && existingVal) {
-    val = applyToDefaults(existingVal, newVal, true);
+    val = defaultsDeep({}, newVal, existingVal);
   } else {
     val = newVal;
   }
