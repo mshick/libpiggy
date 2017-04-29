@@ -2,6 +2,8 @@ import test from 'ava';
 import createConnection from '../src/create-connection';
 import createStore from '../src/create-store';
 import closeConnection from '../src/close-connection';
+import watchTable from '../src/watch-table';
+import listen from '../src/listen';
 import upsert from '../src/upsert';
 import get from '../src/get';
 
@@ -60,6 +62,18 @@ test(async t => {
   }
 
   t.is(createResults.code, 'CREATED');
+
+  let watcherCount = 0;
+  let watcherCalled = false;
+
+  const watcher = () => {
+    watcherCount += 1;
+    watcherCalled = true;
+  };
+
+  watchTable({client, table: TABLE_NAME, watcher});
+
+  listen({client});
 
   await upsert({
     client,
@@ -127,6 +141,9 @@ test(async t => {
   client.close();
 
   await closeConnection(null, {state: STATE});
+
+  t.is(watcherCalled, true);
+  t.is(watcherCount, 10);
 
   t.deepEqual(got1.val, Object.assign({}, FIXTURES[0], {car: 'Lambo'}));
   t.deepEqual(got2.val, FIXTURES[1]);
