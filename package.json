@@ -54,6 +54,7 @@
     "babel-preset-stage-1": "^6.24.1",
     "babel-register": "^6.24.1",
     "eslint": "^3.19.0",
-    "eslint-config-xo-space": "^0.16.0"
+    "eslint-config-xo-space": "^0.16.0",
+    "rimraf": "^2.6.1"
   }
 }
