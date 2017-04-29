@@ -25,20 +25,25 @@ const urlToConfig = function (connectionUrl) {
 };
 
 const createConnection = async function (options, globals) {
+  options = options || {};
+
   try {
-    const settings = applyToDefaults(globals.options, options || {});
+    const settings = {
+      ...globals.options,
+      ...options
+    };
 
     const {
       url: connectionUrl,
       connectionName,
-      connection: connectionConfig
+      connection: connectionOptions
     } = settings;
 
     const {openPools, openClients} = globals.state;
 
     if (!openPools[connectionName]) {
       const urlConfig = urlToConfig(connectionUrl);
-      const config = applyToDefaults(urlConfig, connectionConfig);
+      const config = applyToDefaults(urlConfig, connectionOptions, true);
       openPools[connectionName] = new pg.Pool(config);
     }
 

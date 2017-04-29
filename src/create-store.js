@@ -2,7 +2,6 @@ import createTable from './create-table';
 import createWatchedTable from './create-watched-table';
 import tableExists from './table-exists';
 import createStoreIndexes from './create-store-indexes';
-import {applyToDefaults} from 'hoek';
 
 const defaults = {
   checkExists: false,
@@ -14,7 +13,14 @@ const defaults = {
 };
 
 const createStore = async function ({client, table, index, options}) {
-  const {watch, checkExists, ginIndex, btreeIndex} = applyToDefaults(defaults, options || {});
+  options = options || {};
+
+  const settings = {
+    ...defaults,
+    ...options
+  };
+
+  const {watch, checkExists, ginIndex, btreeIndex} = settings;
 
   try {
     let exists = false;
