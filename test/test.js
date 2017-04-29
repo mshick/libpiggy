@@ -95,7 +95,7 @@ test(async t => {
     key: {car: 'Lambo'}
   });
 
-  // console.log(got1.val);
+  // console.log(got1.createdAt);
 
   const got2 = await get({
     client,

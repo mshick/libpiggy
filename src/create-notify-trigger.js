@@ -15,8 +15,6 @@ const createNotifyTrigger = async function ({client, key}) {
 
     const results = await client.query({text});
 
-    await client.query(`LISTEN watchers`);
-
     return {
       client,
       results

@@ -7,6 +7,7 @@ const watchTable = function ({client, table, watcher}) {
       watcher({client, channel, payload, parsed});
     }
   });
+  client.query(`LISTEN watchers`);
 };
 
 export default watchTable;
