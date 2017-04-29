@@ -1,12 +1,12 @@
-const createNotifyTrigger = async function ({client, key}) {
+const createNotifyTrigger = async function ({client, table, key}) {
   try {
     const text = `
-      CREATE OR REPLACE FUNCTION notify_trigger()
+      CREATE OR REPLACE FUNCTION notify_trigger__${table}()
       RETURNS TRIGGER AS
       $body$
       DECLARE
       BEGIN
-        PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || '&pkey=' || NEW.${key});
+        PERFORM pg_notify('watchers', 'table=' || TG_TABLE_NAME || 'when=' || TG_WHEN || '&newkey=' || NEW.${key} || '&oldkey=' || OLD.${key});
         RETURN NEW;
       END;
       $body$

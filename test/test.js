@@ -46,6 +46,7 @@ test(async t => {
     table: TABLE_NAME,
     index: true,
     options: {
+      watch: true,
       btreeIndex: {
         fields: [['age', 'integer']]
       }
