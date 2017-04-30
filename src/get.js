@@ -24,10 +24,7 @@ const get = async function ({client, table, key, options}) {
       return {
         client,
         results,
-        key: rows[0].key,
-        val: rows[0].val,
-        createdAt: rows[0].created_at,
-        updatedAt: rows[0].updated_at
+        ...rows[0]
       };
     }
 

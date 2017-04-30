@@ -52,7 +52,13 @@ const mget = async function ({client, table, key, options}) {
     text += `;`;
 
     const results = await client.query({text});
-    const {rows} = results;
+
+    const rows = results.rows.map(r => ({
+      key: r.key,
+      val: r.val,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at
+    }));
 
     return {
       client,
