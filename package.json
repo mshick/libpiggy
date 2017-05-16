@@ -17,7 +17,7 @@
     "url": "https://github.com/mshick/libpiggy.git"
   },
   "engines": {
-    "node": ">=6.0.0"
+    "node": ">=4.0.0"
   },
   "keywords": [
     "hapi",
