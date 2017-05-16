@@ -5,6 +5,7 @@ import defaultsDeep from 'lodash/defaultsDeep';
 const defaults = {
   indexType: 'gin',
   limit: 0,
+  offset: 0,
   orderBy: 'updated_at',
   direction: 'desc'
 };
@@ -25,7 +26,7 @@ const getQueryTextBtree = function ({table, key}) {
 const mget = async function ({client, table, key, options}) {
   const settings = defaultsDeep({}, options, defaults);
 
-  const {indexType, limit, orderBy, direction} = settings;
+  const {indexType, limit, offset, orderBy, direction} = settings;
 
   try {
     let text;
@@ -43,6 +44,10 @@ const mget = async function ({client, table, key, options}) {
       if (direction) {
         text += ` ${direction}`;
       }
+    }
+
+    if (offset > 0) {
+      text += ` OFFSET ${offset}`;
     }
 
     if (limit > 0) {
