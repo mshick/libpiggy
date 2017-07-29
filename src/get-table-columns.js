@@ -4,7 +4,7 @@ const getTableColumns = async function ({client, table}) {
       SELECT *
       FROM information_schema.columns
       WHERE table_schema = 'public'
-        AND table_name   = '${table}'
+        AND table_name   = "${table}"
     `;
 
     const results = await client.query({text});

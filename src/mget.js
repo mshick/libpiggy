@@ -15,12 +15,12 @@ const getQueryTextBtree = function ({table, key}) {
   const wheres = keys.map(k => {
     const v = key[k];
     if (isNumber(v)) {
-      return `(val ->> '${k}')::int = '${v}'`;
+      return `("val" ->> '${k}')::int = '${v}'`;
     }
-    return `val ->> '${k}' = '${v}'`;
+    return `"val" ->> '${k}' = '${v}'`;
   });
 
-  return `SELECT * FROM ${table} WHERE ${wheres.join(' AND ')}`;
+  return `SELECT * FROM "${table}" WHERE ${wheres.join(' AND ')}`;
 };
 
 const mget = async function ({client, table, key, options}) {
@@ -32,15 +32,15 @@ const mget = async function ({client, table, key, options}) {
     let text;
 
     if (isString(key)) {
-      text = `SELECT * FROM ${table} WHERE key LIKE '${key}'`;
+      text = `SELECT * FROM "${table}" WHERE "key" LIKE '${key}'`;
     } else if (indexType === 'btree') {
       text = getQueryTextBtree({table, key});
     } else {
-      text = `SELECT * FROM ${table} WHERE val @> '${JSON.stringify(key)}'`;
+      text = `SELECT * FROM "${table}" WHERE "val" @> '${JSON.stringify(key)}'`;
     }
 
     if (orderBy) {
-      text += ` ORDER BY ${orderBy}`;
+      text += ` ORDER BY "${orderBy}"`;
       if (direction) {
         text += ` ${direction}`;
       }

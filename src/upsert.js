@@ -6,9 +6,9 @@ const getQueryText = function ({table, key, existingKey}) {
   let text;
 
   if (existingKey) {
-    text = `UPDATE ${table} SET (val, updated_at) = ($1, current_timestamp) WHERE key = '${key}';`;
+    text = `UPDATE "${table}" SET ("val", "updated_at") = ($1, current_timestamp) WHERE "key" = '${key}';`;
   } else {
-    text = `INSERT INTO ${table} (key, val, created_at, updated_at) VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
+    text = `INSERT INTO "${table}" ("key", "val", "created_at", "updated_at") VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
   }
 
   return text;

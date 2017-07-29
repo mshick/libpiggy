@@ -37,7 +37,7 @@ const createStore = async function ({client, table, index, options}) {
     if (exists) {
       code = EXISTS;
     } else {
-      const columns = 'key text primary key, val jsonb, created_at timestamp with time zone, updated_at timestamp with time zone';
+      const columns = '"key" text primary key, "val" jsonb, "created_at" timestamp with time zone, "updated_at" timestamp with time zone';
 
       if (watch) {
         results = await createWatchedTable({client, table, columns, when: watchWhen, key: 'key'});

@@ -13,15 +13,15 @@ const getRandomInt = function (min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 };
 
-const {POSTGRESQL_URL} = process.env;
+const {PG_URL} = process.env;
 
-const TABLE_NAME = `libpiggy_test`;
+const TABLE_NAME = `Test${getRandomInt(10000, 999999)}`;
 
 const DEFAULTS = {
   connectionName: 'default',
-  url: POSTGRESQL_URL,
+  url: PG_URL,
   connection: {
-    ssl: true,
+    ssl: false,
     max: 10,
     min: 4,
     idleTimeoutMillis: 30000
@@ -118,15 +118,11 @@ test(async t => {
     key: {car: 'Lambo'}
   });
 
-  // console.log(got1.createdAt);
-
   const got2 = await get({
     client,
     table: TABLE_NAME,
     key: {age: 21}
   });
-
-  // console.log(got2.val);
 
   const got3 = await get({
     client,
@@ -134,9 +130,7 @@ test(async t => {
     key: {nested: {foo: 'bar'}}
   });
 
-  // console.log(got3.val);
-
-  await client.query(`DROP TABLE ${TABLE_NAME}`);
+  await client.query(`DROP TABLE "${TABLE_NAME}"`);
 
   client.close();
 
