@@ -1,17 +1,11 @@
-import shortid from 'shortid';
 import defaultsDeep from 'lodash/defaultsDeep';
+import isString from 'lodash/isString';
+import isNumber from 'lodash/isNumber';
 import get from './get';
+import set from './set';
 
-const getQueryText = function ({table, key, existingKey, columnNames}) {
-  let text;
-
-  if (existingKey) {
-    text = `UPDATE "${table}" SET ("${columnNames.val}", "${columnNames.updatedAt}") = ($1, current_timestamp) WHERE "${columnNames.key}" = '${key}';`;
-  } else {
-    text = `INSERT INTO "${table}" ("${columnNames.key}", "${columnNames.val}", "${columnNames.createdAt}", "${columnNames.updatedAt}") VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
-  }
-
-  return text;
+const getText = function ({table, existingKey, columnNames}) {
+  return `UPDATE "${table}" SET ("${columnNames.val}", "${columnNames.updatedAt}") = ($1, current_timestamp) WHERE "${columnNames.key}" = '${existingKey}';`;
 };
 
 const getVal = function ({existingVal, newVal, merge}) {
@@ -38,37 +32,30 @@ const upsert = async function ({
   client = client || store.client;
 
   try {
+    const {columnNames} = store.settings;
     const {merge} = options || {};
 
-    generateKeyFn = generateKeyFn || shortid.generate;
-
-    let got;
+    let existing;
 
     if (key) {
-      got = await get({store, client, table, key, options});
+      existing = await get({store, client, table, key, options});
     }
 
-    let existingKey;
-    let existingVal;
-
-    if (got) {
-      existingKey = got.key;
-      existingVal = got.val;
-      key = existingKey;
+    if (!existing || !existing.key) {
+      let newKey;
+      if (isString(key) || isNumber(key)) {
+        newKey = key;
+      }
+      return set({store, client, table, key: newKey, val: newVal, options, generateKeyFn});
     }
 
-    if (!key || typeof key !== 'string') {
-      key = generateKeyFn();
-    }
-
-    const {columnNames} = store.settings;
-    const text = getQueryText({table, key, existingKey, columnNames});
+    const existingKey = existing.key;
+    const existingVal = existing.val;
+    const text = getText({table, existingKey, columnNames});
     const val = getVal({existingVal, newVal, merge});
     const values = [val];
-
     await client.query({text, values});
-
-    return get({store, client, table, key, options});
+    return get({store, client, table, key: existingKey, options});
   } catch (error) {
     return {
       client,

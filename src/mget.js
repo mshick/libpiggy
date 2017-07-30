@@ -34,7 +34,7 @@ const mget = async function ({store, client, table, key, options}) {
   try {
     let text;
 
-    if (isString(key)) {
+    if (isString(key) || isNumber(key)) {
       text = `SELECT * FROM "${table}" WHERE "${columnNames.key}" LIKE '${key}'`;
     } else if (indexType === 'btree') {
       text = getQueryTextBtree({table, key, columnNames});
