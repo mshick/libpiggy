@@ -96,40 +96,35 @@ test('everything...', async t => {
     watcherCalled = true;
   };
 
-  watchTable({client, table, watcher});
+  watchTable({table, watcher});
 
   listen({client});
 
   await upsert({
-    client,
     table,
     val: FIXTURES[0],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
-    client,
     table,
     val: FIXTURES[1],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
-    client,
     table,
     val: FIXTURES[2],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
-    client,
     table,
     val: FIXTURES[3],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
-    client,
     table,
     key: {lastName: FIXTURES[0].lastName},
     val: {car: 'Lambo'},
@@ -138,19 +133,16 @@ test('everything...', async t => {
   });
 
   const got1 = await get({
-    client,
     table,
     key: {car: 'Lambo'}
   });
 
   const got2 = await get({
-    client,
     table,
     key: {age: 21}
   });
 
   const got3 = await get({
-    client,
     table,
     key: {nested: {foo: 'bar'}}
   });
