@@ -20,6 +20,8 @@ const STORES = {};
 
 /* Exports */
 
+export const state = STATE;
+export const stores = STORES;
 export const constants = {CREATED, EXISTS, ERROR};
 
 export const createConnection = async function (options, globals = {}) {
