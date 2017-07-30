@@ -121,6 +121,25 @@ test('set custom key generation', async t => {
   }
 });
 
+test('set many', async t => {
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+    const setResults = await Promise.all(sets);
+    const gets = setResults.map(({key}) => get({table, key}));
+    const getResults = await Promise.all(gets);
+
+    const results = [];
+    getResults.forEach(res => {
+      results[res.key] = res.val;
+    });
+
+    t.deepEqual(results, FIXTURES);
+  } catch (err) {
+    t.fail(err);
+  }
+});
+
 test('upsert', async t => {
   try {
     const {table} = t.context;

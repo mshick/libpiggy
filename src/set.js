@@ -1,4 +1,5 @@
 import shortid from 'shortid';
+import isUndefined from 'lodash/isUndefined';
 import get from './get';
 
 const set = async function ({store, client, table, key, val, generateKeyFn}) {
@@ -8,7 +9,7 @@ const set = async function ({store, client, table, key, val, generateKeyFn}) {
   try {
     const {columnNames} = store.settings;
 
-    key = key || generateKeyFn();
+    key = isUndefined(key) ? generateKeyFn() : key;
 
     const text = `
       INSERT INTO "${table}" ("${columnNames.key}", "${columnNames.val}", "${columnNames.createdAt}", "${columnNames.updatedAt}")
