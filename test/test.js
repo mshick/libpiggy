@@ -1,7 +1,6 @@
 import test from 'ava';
-import createConnection from '../src/create-connection';
+import {createConnection, closeConnection} from '../src/index';
 import createStore from '../src/create-store';
-import closeConnection from '../src/close-connection';
 import watchTable from '../src/watch-table';
 import listen from '../src/listen';
 import upsert from '../src/upsert';
@@ -15,8 +14,6 @@ const getRandomInt = function (min, max) {
 
 const {POSTGRES_USER, POSTGRES_DB} = process.env;
 const PG_URL = `postgresql://${POSTGRES_USER}@localhost/${POSTGRES_DB}`;
-
-const TABLE_NAME = `Test${getRandomInt(10000, 999999)}`;
 
 const DEFAULTS = {
   connectionName: 'default',
@@ -41,14 +38,20 @@ const FIXTURES = [
   {firstName: 'King', lastName: 'Kong', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
-test(async t => {
-  const client = await createConnection(null, {state: STATE, options: DEFAULTS});
+test.beforeEach('create connection', async t => {
+  const client = await createConnection(null, {
+    state: STATE,
+    options: DEFAULTS
+  });
+
+  const table = `Test${getRandomInt(10000, 999999)}`;
 
   let createResults;
+
   try {
     createResults = await createStore({
       client,
-      table: TABLE_NAME,
+      table,
       index: true,
       options: {
         watch: true,
@@ -62,7 +65,25 @@ test(async t => {
     t.fail();
   }
 
+  if (createResults.code === 'ERROR') {
+    console.log(createResults);
+  }
+
   t.is(createResults.code, 'CREATED');
+
+  t.context.client = client;
+  t.context.table = table;
+});
+
+test.afterEach('cleanup', async t => {
+  const {client, table} = t.context;
+  await client.query(`DROP TABLE "${table}"`);
+  client.close();
+  await closeConnection(null, {state: STATE});
+});
+
+test('everything...', async t => {
+  const {client, table} = t.context;
 
   let watcherCount = 0;
   let watcherCalled = false;
@@ -72,41 +93,41 @@ test(async t => {
     watcherCalled = true;
   };
 
-  watchTable({client, table: TABLE_NAME, watcher});
+  watchTable({client, table, watcher});
 
   listen({client});
 
   await upsert({
     client,
-    table: TABLE_NAME,
+    table,
     val: FIXTURES[0],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
     client,
-    table: TABLE_NAME,
+    table,
     val: FIXTURES[1],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
     client,
-    table: TABLE_NAME,
+    table,
     val: FIXTURES[2],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
     client,
-    table: TABLE_NAME,
+    table,
     val: FIXTURES[3],
     generateKeyFn: () => getRandomInt(1000, 1000000)
   });
 
   await upsert({
     client,
-    table: TABLE_NAME,
+    table,
     key: {lastName: FIXTURES[0].lastName},
     val: {car: 'Lambo'},
     options: {merge: true},
@@ -115,27 +136,21 @@ test(async t => {
 
   const got1 = await get({
     client,
-    table: TABLE_NAME,
+    table,
     key: {car: 'Lambo'}
   });
 
   const got2 = await get({
     client,
-    table: TABLE_NAME,
+    table,
     key: {age: 21}
   });
 
   const got3 = await get({
     client,
-    table: TABLE_NAME,
+    table,
     key: {nested: {foo: 'bar'}}
   });
-
-  await client.query(`DROP TABLE "${TABLE_NAME}"`);
-
-  client.close();
-
-  await closeConnection(null, {state: STATE});
 
   t.is(watcherCalled, true);
   t.is(watcherCount, 10);

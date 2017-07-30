@@ -38,3 +38,6 @@ jspm_packages
 
 # Ignore built files
 lib
+
+# dotenv file
+.env
