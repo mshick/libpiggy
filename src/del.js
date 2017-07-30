@@ -1,6 +1,7 @@
-const del = async function ({client, table, key}) {
+const del = async function ({client, table, key, store}) {
   try {
-    const text = `DELETE FROM "${table}" WHERE "key" = $1;`;
+    const {columnNames} = store.settings;
+    const text = `DELETE FROM "${table}" WHERE "${columnNames.key}" = $1;`;
     const values = [key];
     const results = await client.query({text, values});
 

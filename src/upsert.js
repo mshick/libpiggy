@@ -2,13 +2,13 @@ import shortid from 'shortid';
 import defaultsDeep from 'lodash/defaultsDeep';
 import get from './get';
 
-const getQueryText = function ({table, key, existingKey}) {
+const getQueryText = function ({table, key, existingKey, columnNames}) {
   let text;
 
   if (existingKey) {
-    text = `UPDATE "${table}" SET ("val", "updated_at") = ($1, current_timestamp) WHERE "key" = '${key}';`;
+    text = `UPDATE "${table}" SET ("${columnNames.val}", "${columnNames.updatedAt}") = ($1, current_timestamp) WHERE "${columnNames.key}" = '${key}';`;
   } else {
-    text = `INSERT INTO "${table}" ("key", "val", "created_at", "updated_at") VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
+    text = `INSERT INTO "${table}" ("${columnNames.key}", "${columnNames.val}", "${columnNames.createdAt}", "${columnNames.updatedAt}") VALUES ('${key}', $1, current_timestamp, current_timestamp);`;
   }
 
   return text;
@@ -27,6 +27,7 @@ const getVal = function ({existingVal, newVal, merge}) {
 };
 
 const upsert = async function ({
+  store,
   client,
   table,
   key,
@@ -42,7 +43,7 @@ const upsert = async function ({
     let got;
 
     if (key) {
-      got = await get({client, table, key, options});
+      got = await get({store, client, table, key, options});
     }
 
     let existingKey;
@@ -58,13 +59,14 @@ const upsert = async function ({
       key = generateKeyFn();
     }
 
-    const text = getQueryText({table, key, existingKey});
+    const {columnNames} = store.settings;
+    const text = getQueryText({table, key, existingKey, columnNames});
     const val = getVal({existingVal, newVal, merge});
     const values = [val];
 
     await client.query({text, values});
 
-    return get({client, table, key, options});
+    return get({store, client, table, key, options});
   } catch (error) {
     return {
       client,

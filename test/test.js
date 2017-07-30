@@ -1,10 +1,13 @@
 import test from 'ava';
-import {createConnection, closeConnection} from '../src/index';
-import createStore from '../src/create-store';
-import watchTable from '../src/watch-table';
-import listen from '../src/listen';
-import upsert from '../src/upsert';
-import get from '../src/get';
+import {
+  createConnection,
+  closeConnection,
+  createStore,
+  watchTable,
+  listen,
+  upsert,
+  get
+} from '../src/index';
 
 const getRandomInt = function (min, max) {
   min = Math.ceil(min);

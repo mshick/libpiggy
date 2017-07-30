@@ -2,22 +2,22 @@ import assert from 'assert';
 import isArray from 'lodash/isArray';
 import isNumber from 'lodash/isNumber';
 
-const getQueryTextGin = function ({table, options}) {
+const getQueryTextGin = function ({table, columnNames, options}) {
   const {operator} = options || {};
 
-  let jsonPath = 'val';
+  let jsonPath = columnNames.val;
 
   if (operator === 'jsonb_path_ops') {
-    jsonPath = 'val jsonb_path_ops';
+    jsonPath = `${columnNames.val} jsonb_path_ops`;
   }
 
   return `
     CREATE INDEX IF NOT EXISTS "${table}_gin_index"
-      ON ${table} USING gin (${jsonPath});
+      ON "${table}" USING gin (${jsonPath});
   `;
 };
 
-const getQueryTextBtree = function ({table, options}) {
+const getQueryTextBtree = function ({table, columnNames, options}) {
   const {fields} = options || {};
 
   if (fields && fields.length) {
@@ -38,15 +38,15 @@ const getQueryTextBtree = function ({table, options}) {
       const fieldParts = fieldPartsRaw.map(p => isNumber(p) ? p : `'${p}'`);
 
       if (fieldType === 'object') {
-        jsonPath = `(val -> ${fieldParts.join(' -> ')})`;
+        jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')})`;
       }
 
       if (fieldType === 'text' || fieldType === 'integer') {
         const fieldLast = fieldParts.pop();
         if (fieldParts.length) {
-          jsonPath = `(val -> ${fieldParts.join(' -> ')} ->> ${fieldLast})`;
+          jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')} ->> ${fieldLast})`;
         } else {
-          jsonPath = `(val ->> ${fieldLast})`;
+          jsonPath = `("${columnNames.val}" ->> ${fieldLast})`;
         }
       }
 
@@ -55,7 +55,7 @@ const getQueryTextBtree = function ({table, options}) {
       }
 
       return `
-        CREATE INDEX IF NOT EXISTS "${table}_${indexName}_btree_index" ON ${table} (${jsonPath});
+        CREATE INDEX IF NOT EXISTS "${table}_${indexName}_btree_index" ON "${table}" (${jsonPath});
       `;
     });
 
@@ -65,16 +65,16 @@ const getQueryTextBtree = function ({table, options}) {
   return '';
 };
 
-const createIndexes = async function ({client, table, ginIndex, btreeIndex}) {
+const createIndexes = async function ({client, table, ginIndex, btreeIndex, columnNames}) {
   try {
     let text = '';
 
     if (ginIndex) {
-      text += getQueryTextGin({table, options: ginIndex});
+      text += getQueryTextGin({table, columnNames, options: ginIndex});
     }
 
     if (btreeIndex) {
-      text += getQueryTextBtree({table, options: btreeIndex});
+      text += getQueryTextBtree({table, columnNames, options: btreeIndex});
     }
 
     const results = await client.query({text});

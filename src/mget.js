@@ -6,41 +6,46 @@ const defaults = {
   indexType: 'gin',
   limit: 0,
   offset: 0,
-  orderBy: 'updated_at',
+  orderBy: 'updatedAt',
   direction: 'desc'
 };
 
-const getQueryTextBtree = function ({table, key}) {
+const getQueryTextBtree = function ({table, key, columnNames}) {
   const keys = Object.keys(key);
   const wheres = keys.map(k => {
     const v = key[k];
     if (isNumber(v)) {
-      return `("val" ->> '${k}')::int = '${v}'`;
+      return `("${columnNames.val}" ->> '${k}')::int = '${v}'`;
     }
-    return `"val" ->> '${k}' = '${v}'`;
+    return `"${columnNames.val}" ->> '${k}' = '${v}'`;
   });
 
   return `SELECT * FROM "${table}" WHERE ${wheres.join(' AND ')}`;
 };
 
-const mget = async function ({client, table, key, options}) {
+const mget = async function ({store, client, table, key, options}) {
   const settings = defaultsDeep({}, options, defaults);
 
   const {indexType, limit, offset, orderBy, direction} = settings;
+  const {columnNames} = store.settings;
 
   try {
     let text;
 
     if (isString(key)) {
-      text = `SELECT * FROM "${table}" WHERE "key" LIKE '${key}'`;
+      text = `SELECT * FROM "${table}" WHERE "${columnNames.key}" LIKE '${key}'`;
     } else if (indexType === 'btree') {
-      text = getQueryTextBtree({table, key});
+      text = getQueryTextBtree({table, key, columnNames});
     } else {
-      text = `SELECT * FROM "${table}" WHERE "val" @> '${JSON.stringify(key)}'`;
+      text = `SELECT * FROM "${table}" WHERE "${columnNames.val}" @> '${JSON.stringify(key)}'`;
     }
 
     if (orderBy) {
-      text += ` ORDER BY "${orderBy}"`;
+      if (columnNames[orderBy]) {
+        text += ` ORDER BY "${columnNames[orderBy]}"`;
+      } else {
+        text += ` ORDER BY "${orderBy}"`;
+      }
       if (direction) {
         text += ` ${direction}`;
       }
@@ -61,8 +66,8 @@ const mget = async function ({client, table, key, options}) {
     const rows = results.rows.map(r => ({
       key: r.key,
       val: r.val,
-      createdAt: r.created_at,
-      updatedAt: r.updated_at
+      createdAt: r[columnNames.createdAt],
+      updatedAt: r[columnNames.updatedAt]
     }));
 
     return {

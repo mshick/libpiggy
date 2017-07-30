@@ -3,6 +3,7 @@ import createTable from './create-table';
 import createWatchedTable from './create-watched-table';
 import tableExists from './table-exists';
 import createStoreIndexes from './create-store-indexes';
+import {CREATED, ERROR, EXISTS} from './constants';
 
 const defaults = {
   checkExists: false,
@@ -11,17 +12,19 @@ const defaults = {
   ginIndex: {
     operator: 'jsonb_path_ops'
   },
-  btreeIndex: false
+  btreeIndex: false,
+  columnNames: {
+    key: 'key',
+    val: 'val',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  }
 };
-
-const CREATED = 'CREATED';
-const EXISTS = 'EXISTS';
-const ERROR = 'ERROR';
 
 const createStore = async function ({client, table, index, options}) {
   const settings = defaultsDeep({}, options, defaults);
-
-  const {watch, watchWhen, checkExists, ginIndex, btreeIndex} = settings;
+  const {watch, watchWhen, checkExists, ginIndex, btreeIndex, columnNames} = settings;
+  const columns = `"${columnNames.key}" text primary key, "${columnNames.val}" jsonb, "${columnNames.createdAt}" timestamp with time zone, "${columnNames.updatedAt}" timestamp with time zone`;
 
   try {
     let results;
@@ -37,16 +40,20 @@ const createStore = async function ({client, table, index, options}) {
     if (exists) {
       code = EXISTS;
     } else {
-      const columns = '"key" text primary key, "val" jsonb, "created_at" timestamp with time zone, "updated_at" timestamp with time zone';
-
       if (watch) {
-        results = await createWatchedTable({client, table, columns, when: watchWhen, key: 'key'});
+        results = await createWatchedTable({
+          client,
+          table,
+          columns,
+          when: watchWhen,
+          key: columnNames.key
+        });
       } else {
         results = await createTable({client, table, columns});
       }
 
       if (index) {
-        await createStoreIndexes({client, table, ginIndex, btreeIndex});
+        await createStoreIndexes({client, table, ginIndex, btreeIndex, columnNames});
       }
 
       const checkResults = await tableExists({client, table});
@@ -58,10 +65,20 @@ const createStore = async function ({client, table, index, options}) {
       }
     }
 
-    return {client, results, code};
+    return {
+      settings,
+      columns,
+      client,
+      table,
+      results,
+      code
+    };
   } catch (error) {
     return {
+      settings,
+      columns,
       client,
+      table,
       code: ERROR,
       error
     };

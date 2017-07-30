@@ -1,10 +1,11 @@
 import mget from './mget';
 
-const get = async function ({client, table, key, options}) {
+const get = async function ({client, table, key, options, store}) {
   options = options || {};
 
   try {
     const got = await mget({
+      store,
       client,
       table,
       key,
