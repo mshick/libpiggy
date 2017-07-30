@@ -1,4 +1,4 @@
-# libpiggy [![Build Status](https://travis-ci.org/mshick/libpiggy.svg?branch=master)](https://travis-ci.org/mshick/libpiggy)
+# libpiggy [![Build Status](https://travis-ci.org/mshick/libpiggy.svg?branch=master)](https://travis-ci.org/mshick/libpiggy) [![npm version](https://badge.fury.io/js/libpiggy.svg)](https://badge.fury.io/js/libpiggy)
 Use a PostgreSQL database like a JSON document store.
 
 ## Why?
@@ -6,6 +6,7 @@ Use a PostgreSQL database like a JSON document store.
 On the surface using a relational database as a JSON document store might seem silly. Still, I think there are great reasons to choose this approach over something like Mongo.
 
 * You like PostgreSQL
+* Postgres JSON querying and indexing is powerful and capable
 * You like the option of using PostgreSQL queries, in addition to some of the more ORM-like abstractions incorporated here
 * You like the idea of prototyping data objects with the flexibility of schema-less JSON, but imagine yourself making changes to a more relational model in the future
 * For some reason you only have access to PostgreSQL, but prefer this approach
@@ -17,16 +18,17 @@ For now please look at the tests, and at the [hapi-piggy](https://github.com/msh
 
 ## Testing
 
-You'll need to provide the URL to a running PostgreSQL server, like so:
+You'll need Docker and docker-compose available.
 
 ```sh
-POSTGRESQL_URL=postgresql://user:pass@localhost/db npm test
+$ docker-compose up
+$ yarn test
 ```
 
 ## Requirements
 
 * Node.js >= 6.0
-* PostgreSQL >= 9.4 (tested with 9.6)
+* PostgreSQL >= 9.4 (local tests use 9.6, Travis uses 9.4)
 
 ## Todo
 
