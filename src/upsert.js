@@ -1,6 +1,7 @@
 import defaultsDeep from 'lodash/defaultsDeep';
 import isString from 'lodash/isString';
 import isNumber from 'lodash/isNumber';
+import createClient from './create-client';
 import get from './get';
 import set from './set';
 
@@ -28,10 +29,15 @@ const upsert = async function ({
   val: newVal,
   options,
   generateKeyFn
-}) {
-  client = client || store.client;
+}, globals) {
+  let clientCreated = false;
 
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     const {columnNames} = store.settings;
     const {merge} = options || {};
 
@@ -61,6 +67,10 @@ const upsert = async function ({
       client,
       error
     };
+  } finally {
+    if (clientCreated && client) {
+      client.close();
+    }
   }
 };
 

@@ -24,7 +24,7 @@ const urlToConfig = function (connectionUrl) {
   };
 };
 
-const createConnection = async function (options, globals) {
+const createPool = async function (options, globals) {
   try {
     const settings = defaultsDeep({}, options, globals.options);
 
@@ -34,7 +34,7 @@ const createConnection = async function (options, globals) {
       connection: connectionOptions
     } = settings;
 
-    const {openPools, openClients} = globals.state;
+    const {openPools} = globals.state;
 
     if (!openPools[connectionName]) {
       const urlConfig = urlToConfig(connectionUrl);
@@ -42,22 +42,10 @@ const createConnection = async function (options, globals) {
       openPools[connectionName] = new pg.Pool(poolConfig);
     }
 
-    const client = await openPools[connectionName].connect();
-
-    openClients.push(client);
-
-    client.close = () => {
-      const clientIndex = openClients.indexOf(client);
-      if (clientIndex > -1) {
-        openClients.splice(clientIndex, 1);
-      }
-      client.release();
-    };
-
-    return client;
+    return openPools[connectionName];
   } catch (error) {
     throw error;
   }
 };
 
-export default createConnection;
+export default createPool;

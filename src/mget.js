@@ -1,6 +1,7 @@
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import defaultsDeep from 'lodash/defaultsDeep';
+import createClient from './create-client';
 
 const defaults = {
   indexType: 'gin',
@@ -23,8 +24,8 @@ const getQueryTextBtree = function ({table, key, columnNames}) {
   return `SELECT * FROM "${table}" WHERE ${wheres.join(' AND ')}`;
 };
 
-const mget = async function ({store, client, table, key, options}) {
-  client = client || store.client;
+const mget = async function ({store, client, table, key, options}, globals) {
+  let clientCreated = false;
 
   const settings = defaultsDeep({}, options, defaults);
 
@@ -32,6 +33,11 @@ const mget = async function ({store, client, table, key, options}) {
   const {columnNames} = store.settings;
 
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     let text;
 
     if (isString(key) || isNumber(key)) {
@@ -82,6 +88,10 @@ const mget = async function ({store, client, table, key, options}) {
       client,
       error
     };
+  } finally {
+    if (clientCreated) {
+      client.close();
+    }
   }
 };
 

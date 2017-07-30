@@ -1,7 +1,14 @@
-const getTableColumns = async function ({client, table, store}) {
-  client = client || store.client;
+import createClient from './create-client';
+
+const getTableColumns = async function ({client, table, options}, globals) {
+  let clientCreated = false;
 
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     const text = `
       SELECT *
       FROM information_schema.columns
@@ -21,6 +28,10 @@ const getTableColumns = async function ({client, table, store}) {
       client,
       error
     };
+  } finally {
+    if (clientCreated) {
+      client.close();
+    }
   }
 };
 

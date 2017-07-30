@@ -1,6 +1,7 @@
 import test from 'ava';
 import {
-  createConnection,
+  createPool,
+  createClient,
   closeConnection,
   createStore,
   watchTable,
@@ -21,7 +22,6 @@ const {POSTGRES_USER, POSTGRES_DB} = process.env;
 const PG_URL = `postgresql://${POSTGRES_USER}@localhost/${POSTGRES_DB}`;
 
 const CONFIG = {
-  connectionName: 'default',
   url: PG_URL,
   connection: {
     ssl: false,
@@ -38,15 +38,20 @@ const FIXTURES = [
   {firstName: 'King', lastName: 'Kong', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
-test.beforeEach('create connection', async t => {
-  const client = await createConnection(CONFIG);
-
-  const table = `Test${getRandomInt(10000, 999999)}`;
-
-  let createResults;
-
+test.before('create connection pool', async t => {
   try {
-    createResults = await createStore({
+    return createPool(CONFIG);
+  } catch (err) {
+    t.fail(err);
+  }
+});
+
+test.beforeEach('create connection', async t => {
+  try {
+    const client = await createClient(CONFIG);
+    const table = `Test${getRandomInt(10000, 999999)}`;
+
+    const createResults = await createStore({
       client,
       table,
       index: true,
@@ -61,19 +66,18 @@ test.beforeEach('create connection', async t => {
         }
       }
     });
-  } catch (error) {
-    console.log(error);
-    t.fail();
+
+    if (createResults.code === 'ERROR') {
+      throw (createResults);
+    }
+
+    t.is(createResults.code, 'CREATED');
+
+    t.context.client = client;
+    t.context.table = table;
+  } catch (err) {
+    t.fail(err);
   }
-
-  if (createResults.code === 'ERROR') {
-    console.log(createResults);
-  }
-
-  t.is(createResults.code, 'CREATED');
-
-  t.context.client = client;
-  t.context.table = table;
 });
 
 test.afterEach('cleanup', async t => {
@@ -192,7 +196,7 @@ test('insert and upsert several values', async t => {
       watcherCalled = true;
     };
 
-    watchTable({table, watcher});
+    watchTable({client, table, watcher});
 
     listen({client});
 

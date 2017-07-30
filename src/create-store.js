@@ -1,4 +1,5 @@
 import defaultsDeep from 'lodash/defaultsDeep';
+import createClient from './create-client';
 import createTable from './create-table';
 import createWatchedTable from './create-watched-table';
 import tableExists from './table-exists';
@@ -21,12 +22,19 @@ const defaults = {
   }
 };
 
-const createStore = async function ({client, table, index, options}) {
+const createStore = async function ({client, table, index, options}, globals) {
+  let clientCreated = false;
+
   const settings = defaultsDeep({}, options, defaults);
   const {watch, watchWhen, checkExists, ginIndex, btreeIndex, columnNames} = settings;
   const columns = `"${columnNames.key}" text primary key, "${columnNames.val}" jsonb, "${columnNames.createdAt}" timestamp with time zone, "${columnNames.updatedAt}" timestamp with time zone`;
 
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     let results;
     let code;
 
@@ -82,6 +90,10 @@ const createStore = async function ({client, table, index, options}) {
       code: ERROR,
       error
     };
+  } finally {
+    if (clientCreated) {
+      client.close();
+    }
   }
 };
 

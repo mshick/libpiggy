@@ -1,12 +1,19 @@
 import shortid from 'shortid';
 import isUndefined from 'lodash/isUndefined';
+import createClient from './create-client';
 import get from './get';
 
-const set = async function ({store, client, table, key, val, generateKeyFn}) {
-  client = client || store.client;
+const set = async function ({store, client, table, key, val, options, generateKeyFn}, globals) {
   generateKeyFn = generateKeyFn || shortid.generate;
 
+  let clientCreated = false;
+
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     const {columnNames} = store.settings;
 
     key = isUndefined(key) ? generateKeyFn() : key;
@@ -24,6 +31,10 @@ const set = async function ({store, client, table, key, val, generateKeyFn}) {
     return {
       error
     };
+  } finally {
+    if (clientCreated) {
+      client.close();
+    }
   }
 };
 

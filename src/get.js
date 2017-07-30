@@ -1,10 +1,17 @@
+import createClient from './create-client';
 import mget from './mget';
 
-const get = async function ({client, table, key, options, store}) {
-  client = client || store.client;
+const get = async function ({client, table, key, options, store}, globals) {
   options = options || {};
 
+  let clientCreated = false;
+
   try {
+    if (!client) {
+      client = await createClient(options, globals);
+      clientCreated = true;
+    }
+
     const got = await mget({
       store,
       client,
@@ -39,6 +46,10 @@ const get = async function ({client, table, key, options, store}) {
       client,
       error
     };
+  } finally {
+    if (clientCreated) {
+      client.close();
+    }
   }
 };
 
