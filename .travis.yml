@@ -1,15 +1,13 @@
+env:
+  - POSTGRES_USER=postgres
+  - POSTGRES_DB=travis_ci_test
 sudo: false
-
 language: node_js
-
 cache: yarn
-
 services:
   - postgresql
-
 node_js:
   - 6
   - 8
-
 before_script:
-  - psql -c 'create database libpiggy;' -U libpiggy
+  - psql -c 'create database travis_ci_test;' -U postgres

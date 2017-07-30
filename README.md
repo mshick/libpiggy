@@ -1,4 +1,4 @@
-# libpiggy
+# libpiggy [![Build Status](https://travis-ci.org/mshick/libpiggy.svg?branch=master)](https://travis-ci.org/mshick/libpiggy)
 Use a PostgreSQL database like a JSON document store.
 
 ## Why?

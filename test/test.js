@@ -13,7 +13,8 @@ const getRandomInt = function (min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 };
 
-const {PG_URL} = process.env;
+const {POSTGRES_USER, POSTGRES_DB} = process.env;
+const PG_URL = `postgresql://${POSTGRES_USER}@localhost/${POSTGRES_DB}`;
 
 const TABLE_NAME = `Test${getRandomInt(10000, 999999)}`;
 
