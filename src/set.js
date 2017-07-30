@@ -1,6 +1,8 @@
 import get from './get';
 
 const set = async function ({store, client, table, key, val}) {
+  client = client || store.client;
+
   try {
     const {columnNames} = store.settings;
 

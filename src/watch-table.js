@@ -16,7 +16,9 @@ const isTrigger = function ({table, when, parsed}) {
   return false;
 };
 
-const watchTable = function ({client, table, when, watcher}) {
+const watchTable = function ({client, table, when, watcher, store}) {
+  client = client || store.client;
+
   try {
     client.on('notification', ({channel, payload}) => {
       const parsed = qs.parse(payload);

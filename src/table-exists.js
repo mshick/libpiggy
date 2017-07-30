@@ -1,4 +1,6 @@
-const tableExists = async function ({client, table}) {
+const tableExists = async function ({client, table, store}) {
+  client = client || store.client;
+
   try {
     const text = `SELECT to_regclass('${table}');`;
     const results = await client.query({text});

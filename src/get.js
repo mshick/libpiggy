@@ -1,6 +1,7 @@
 import mget from './mget';
 
 const get = async function ({client, table, key, options, store}) {
+  client = client || store.client;
   options = options || {};
 
   try {

@@ -1,4 +1,6 @@
-const getTableColumns = async function ({client, table}) {
+const getTableColumns = async function ({client, table, store}) {
+  client = client || store.client;
+
   try {
     const text = `
       SELECT *

@@ -24,6 +24,8 @@ const getQueryTextBtree = function ({table, key, columnNames}) {
 };
 
 const mget = async function ({store, client, table, key, options}) {
+  client = client || store.client;
+
   const settings = defaultsDeep({}, options, defaults);
 
   const {indexType, limit, offset, orderBy, direction} = settings;

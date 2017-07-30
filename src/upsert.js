@@ -35,6 +35,8 @@ const upsert = async function ({
   options,
   generateKeyFn
 }) {
+  client = client || store.client;
+
   try {
     const {merge} = options || {};
 
