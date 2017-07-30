@@ -60,6 +60,10 @@ test.beforeEach('create connection', async t => {
         watch: true,
         btreeIndex: {
           fields: [['age', 'integer']]
+        },
+        columnNames: {
+          createdAt: 'createdAt',
+          updatedAt: 'updatedAt'
         }
       }
     });
