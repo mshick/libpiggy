@@ -8,11 +8,11 @@ const getQueryTextGin = function ({table, columnNames, options}) {
   let jsonPath = columnNames.val;
 
   if (operator === 'jsonb_path_ops') {
-    jsonPath = `${columnNames.val} jsonb_path_ops`;
+    jsonPath = `"${columnNames.val}" jsonb_path_ops`;
   }
 
   return `
-    CREATE INDEX IF NOT EXISTS "${table}_gin_index"
+    CREATE INDEX IF NOT EXISTS "${table}_gin"
       ON "${table}" USING gin (${jsonPath});
   `;
 };
@@ -55,7 +55,8 @@ const getQueryTextBtree = function ({table, columnNames, options}) {
       }
 
       return `
-        CREATE INDEX IF NOT EXISTS "${table}_${indexName}_btree_index" ON "${table}" (${jsonPath});
+        CREATE INDEX IF NOT EXISTS "${table}_${indexName}_btree"
+          ON "${table}" (${jsonPath});
       `;
     });
 

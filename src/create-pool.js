@@ -26,13 +26,11 @@ const urlToConfig = function (connectionUrl) {
 
 const createPool = async function (options, globals) {
   try {
-    const settings = defaultsDeep({}, options, globals.options);
-
     const {
       url: connectionUrl,
       connectionName,
       connection: connectionOptions
-    } = settings;
+    } = options;
 
     const {openPools} = globals.state;
 
