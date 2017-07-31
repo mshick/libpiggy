@@ -12,7 +12,7 @@ const getQueryTextGin = function ({table, columnNames, options}) {
   }
 
   return `
-    CREATE INDEX IF NOT EXISTS "${table}_gin"
+    CREATE INDEX IF NOT EXISTS "${table}_${columnNames.val}_idx"
       ON "${table}" USING gin (${jsonPath});
   `;
 };
@@ -55,7 +55,7 @@ const getQueryTextBtree = function ({table, columnNames, options}) {
       }
 
       return `
-        CREATE INDEX IF NOT EXISTS "${table}_${indexName}_btree"
+        CREATE INDEX IF NOT EXISTS "${table}_${columnNames.val}_${indexName}_idx"
           ON "${table}" (${jsonPath});
       `;
     });
