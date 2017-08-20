@@ -39,7 +39,8 @@ const get = async function ({client, table, key, options, store}, globals) {
 
     return {
       client,
-      results
+      results,
+      table
     };
   } catch (error) {
     return {

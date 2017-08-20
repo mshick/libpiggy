@@ -72,6 +72,7 @@ const mget = async function ({store, client, table, key, options}, globals) {
     const results = await client.query({text});
 
     const rows = results.rows.map(r => ({
+      table,
       key: r.key,
       val: r.val,
       createdAt: r[columnNames.createdAt],

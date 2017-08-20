@@ -49,10 +49,20 @@ const upsert = async function ({
 
     if (!existing || !existing.key) {
       let newKey;
+
       if (isString(key) || isNumber(key)) {
         newKey = key;
       }
-      return set({store, client, table, key: newKey, val: newVal, options, generateKeyFn});
+
+      return set({
+        store,
+        client,
+        table,
+        key: newKey,
+        val: newVal,
+        options,
+        generateKeyFn
+      });
     }
 
     const existingKey = existing.key;
@@ -60,11 +70,20 @@ const upsert = async function ({
     const text = getText({table, existingKey, columnNames});
     const val = getVal({existingVal, newVal, merge});
     const values = [val];
+
     await client.query({text, values});
-    return get({store, client, table, key: existingKey, options});
+
+    return get({
+      store,
+      client,
+      table,
+      key: existingKey,
+      options
+    });
   } catch (error) {
     return {
       client,
+      table,
       error
     };
   } finally {

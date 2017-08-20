@@ -26,9 +26,15 @@ const set = async function ({store, client, table, key, val, options, generateKe
 
     await client.query({text, values});
 
-    return get({store, client, table, key});
+    return get({
+      store,
+      client,
+      table,
+      key
+    });
   } catch (error) {
     return {
+      table,
       error
     };
   } finally {

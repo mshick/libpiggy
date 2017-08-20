@@ -17,11 +17,13 @@ const del = async function ({client, table, key, store, options}, globals) {
     return {
       client,
       results,
+      table,
       key
     };
   } catch (error) {
     return {
       client,
+      table,
       error
     };
   } finally {
