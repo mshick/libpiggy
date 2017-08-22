@@ -1,5 +1,4 @@
 import test from 'ava';
-import {promisify} from 'util';
 import {
   createPool,
   createClient,
@@ -13,8 +12,6 @@ import {
   del,
   mget
 } from '../src/index';
-
-const sleep = setTimeout[promisify.custom];
 
 const getRandomInt = function (min, max) {
   min = Math.ceil(min);
