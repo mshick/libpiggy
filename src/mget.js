@@ -8,7 +8,7 @@ const defaults = {
   limit: 0,
   offset: 0,
   orderBy: 'updatedAt',
-  direction: 'desc'
+  sort: 'desc'
 };
 
 const getQueryTextBtree = function ({table, key, columnNames}) {
@@ -24,12 +24,28 @@ const getQueryTextBtree = function ({table, key, columnNames}) {
   return `SELECT * FROM "${table}" WHERE ${wheres.join(' AND ')}`;
 };
 
+const getOrderByText = function ({columnNames, field, sort}) {
+  let text = '';
+
+  if (columnNames[field]) {
+    text += `"${columnNames[field]}"`;
+  } else {
+    text += `"${columnNames.val}" ->> '${field}'`;
+  }
+
+  if (sort) {
+    text += ` ${sort.toUpperCase()}`;
+  }
+
+  return text;
+};
+
 const mget = async function ({store, client, table, key, options}, globals) {
   let clientCreated = false;
 
   const settings = defaultsDeep({}, options, defaults);
 
-  const {indexType, limit, offset, orderBy, direction} = settings;
+  const {indexType, limit, offset, orderBy, sort} = settings;
   const {columnNames} = store.settings;
 
   try {
@@ -49,13 +65,14 @@ const mget = async function ({store, client, table, key, options}, globals) {
     }
 
     if (orderBy) {
-      if (columnNames[orderBy]) {
-        text += ` ORDER BY "${columnNames[orderBy]}"`;
+      text += ` ORDER BY `;
+
+      if (isString(orderBy)) {
+        text += getOrderByText({field: orderBy, sort, columnNames});
       } else {
-        text += ` ORDER BY "${orderBy}"`;
-      }
-      if (direction) {
-        text += ` ${direction}`;
+        text += orderBy
+          .map(o => getOrderByText({...o, columnNames}))
+          .join(', ');
       }
     }
 

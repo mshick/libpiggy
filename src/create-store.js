@@ -26,7 +26,14 @@ const createStore = async function ({client, table, index, options}, globals) {
   let clientCreated = false;
 
   const settings = defaultsDeep({}, options, defaults);
-  const {watch, watchWhen, checkExists, ginIndex, btreeIndex, columnNames} = settings;
+  const {
+    watch,
+    watchWhen,
+    checkExists,
+    ginIndex,
+    btreeIndex,
+    columnNames
+  } = settings;
   const columns = `"${columnNames.key}" text primary key, "${columnNames.val}" jsonb, "${columnNames.createdAt}" timestamp with time zone, "${columnNames.updatedAt}" timestamp with time zone`;
 
   try {
@@ -60,10 +67,6 @@ const createStore = async function ({client, table, index, options}, globals) {
         results = await createTable({client, table, columns});
       }
 
-      if (index) {
-        await createStoreIndexes({client, table, ginIndex, btreeIndex, columnNames});
-      }
-
       const checkResults = await tableExists({client, table});
 
       if (checkResults.results) {
@@ -71,6 +74,10 @@ const createStore = async function ({client, table, index, options}, globals) {
       } else {
         throw new Error('created table does not exist');
       }
+    }
+
+    if (index) {
+      await createStoreIndexes({client, table, ginIndex, btreeIndex, columnNames});
     }
 
     return {

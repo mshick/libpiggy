@@ -1,4 +1,5 @@
 import test from 'ava';
+import {promisify} from 'util';
 import {
   createPool,
   createClient,
@@ -9,8 +10,11 @@ import {
   upsert,
   get,
   set,
-  del
+  del,
+  mget
 } from '../src/index';
+
+const sleep = setTimeout[promisify.custom];
 
 const getRandomInt = function (min, max) {
   min = Math.ceil(min);
@@ -32,9 +36,10 @@ const CONFIG = {
 };
 
 const FIXTURES = [
-  {firstName: 'Cool', lastName: 'Foo', car: 'Prius', age: 16},
+  {firstName: 'Cool', lastName: 'Foo', car: 'Prius', age: 40},
   {firstName: 'Little', lastName: 'Guy', car: 'Rari', age: 21},
   {firstName: 'BIG', lastName: 'Guy', car: 'Lambo', age: 22},
+  {firstName: 'Double', lastName: 'Trouble', car: 'Civic', age: 22},
   {firstName: 'King', lastName: 'Kong', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
@@ -86,11 +91,11 @@ test.afterEach('cleanup', async t => {
   client.close();
 });
 
-test.always.after('close connection', async () => {
-  return closeConnection();
+test.always.after('close connection', () => {
+  closeConnection();
 });
 
-test('set', async t => {
+test.serial('set', async t => {
   try {
     const {table} = t.context;
     const key = getRandomInt(1000, 1000000);
@@ -102,7 +107,7 @@ test('set', async t => {
   }
 });
 
-test('set default key generation', async t => {
+test.serial('set default key generation', async t => {
   try {
     const {table} = t.context;
     const {key} = await set({table, val: FIXTURES[0]});
@@ -113,7 +118,7 @@ test('set default key generation', async t => {
   }
 });
 
-test('set custom key generation', async t => {
+test.serial('set custom key generation', async t => {
   try {
     const {table} = t.context;
     const generateKeyFn = () => getRandomInt(1000, 1000000);
@@ -125,7 +130,7 @@ test('set custom key generation', async t => {
   }
 });
 
-test('set many', async t => {
+test.serial('set many', async t => {
   try {
     const {table} = t.context;
     const sets = FIXTURES.map((val, key) => set({table, key, val}));
@@ -144,7 +149,44 @@ test('set many', async t => {
   }
 });
 
-test('upsert', async t => {
+test.serial('multiple orderBy statements', async t => {
+  t.plan(5);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      key: '%',
+      options: {
+        orderBy: [{
+          field: 'age',
+          sort: 'asc'
+        }, {
+          field: 'createdAt',
+          sort: 'desc'
+        }]
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values[0].age, FIXTURES[1].age);
+    t.is(values[1].age, FIXTURES[2].age);
+    t.is(values[2].age, FIXTURES[3].age);
+    t.is(values[3].age, FIXTURES[4].age);
+    t.is(values[4].age, FIXTURES[0].age);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
+test.serial('upsert', async t => {
   try {
     const {table} = t.context;
     const key = getRandomInt(1000, 1000000);
@@ -156,7 +198,7 @@ test('upsert', async t => {
   }
 });
 
-test('upsert custom key generation', async t => {
+test.serial('upsert custom key generation', async t => {
   try {
     const {table} = t.context;
     const {key} = await upsert({
@@ -171,7 +213,7 @@ test('upsert custom key generation', async t => {
   }
 });
 
-test('del', async t => {
+test.serial('del', async t => {
   try {
     const {table} = t.context;
     const key = getRandomInt(1000, 1000000);
@@ -184,7 +226,7 @@ test('del', async t => {
   }
 });
 
-test('insert and upsert several values', async t => {
+test.serial('insert and upsert several values', async t => {
   const {client, table} = t.context;
 
   try {
@@ -217,7 +259,7 @@ test('insert and upsert several values', async t => {
 
     await upsert({
       table,
-      val: FIXTURES[3]
+      val: FIXTURES[4]
     });
 
     await upsert({
@@ -247,7 +289,7 @@ test('insert and upsert several values', async t => {
 
     t.deepEqual(got1.val, Object.assign({}, FIXTURES[0], {car: 'Lambo'}));
     t.deepEqual(got2.val, FIXTURES[1]);
-    t.deepEqual(got3.val, FIXTURES[3]);
+    t.deepEqual(got3.val, FIXTURES[4]);
   } catch (err) {
     t.fail(err);
   }
