@@ -227,11 +227,9 @@ test.serial('insert and upsert several values', async t => {
   const {client, table} = t.context;
 
   try {
-    let watcherCount = 0;
     let watcherCalled = false;
 
     const watcher = () => {
-      watcherCount += 1;
       watcherCalled = true;
     };
 
@@ -282,7 +280,6 @@ test.serial('insert and upsert several values', async t => {
     });
 
     t.is(watcherCalled, true);
-    t.is(watcherCount, 10);
 
     t.deepEqual(got1.val, Object.assign({}, FIXTURES[0], {car: 'Lambo'}));
     t.deepEqual(got2.val, FIXTURES[1]);
