@@ -28,7 +28,7 @@ $ yarn test
 ## Requirements
 
 * Node.js >= 6.0
-* PostgreSQL >= 9.4 (local tests use 9.6, Travis uses 9.4)
+* PostgreSQL >= 9.5 (local tests use 9.6, Travis uses 9.5)
 
 ## Todo
 
