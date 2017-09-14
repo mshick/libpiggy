@@ -10,10 +10,7 @@ const defaults = {
   checkExists: false,
   watch: false,
   watchWhen: false,
-  ginIndex: {
-    operator: 'jsonb_path_ops'
-  },
-  btreeIndex: false,
+  indexes: false,
   columnNames: {
     key: 'key',
     val: 'val',
@@ -30,8 +27,7 @@ const createStore = async function ({client, table, index, options}, globals) {
     watch,
     watchWhen,
     checkExists,
-    ginIndex,
-    btreeIndex,
+    indexes,
     columnNames
   } = settings;
   const columns = `"${columnNames.key}" text primary key, "${columnNames.val}" jsonb, "${columnNames.createdAt}" timestamp with time zone, "${columnNames.updatedAt}" timestamp with time zone`;
@@ -77,7 +73,7 @@ const createStore = async function ({client, table, index, options}, globals) {
     }
 
     if (index) {
-      await createStoreIndexes({client, table, ginIndex, btreeIndex, columnNames});
+      await createStoreIndexes({client, table, indexes, columnNames});
     }
 
     return {
@@ -89,14 +85,8 @@ const createStore = async function ({client, table, index, options}, globals) {
       code
     };
   } catch (error) {
-    return {
-      settings,
-      columns,
-      client,
-      table,
-      code: ERROR,
-      error
-    };
+    error.code = ERROR;
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();

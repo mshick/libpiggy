@@ -3,10 +3,7 @@ const listen = async function ({client}) {
     await client.query(`LISTEN watchers`);
     return {client};
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

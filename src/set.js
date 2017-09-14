@@ -33,10 +33,7 @@ const set = async function ({store, client, table, key, val, options, generateKe
       key
     });
   } catch (error) {
-    return {
-      table,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();

@@ -102,10 +102,7 @@ const mget = async function ({store, client, table, key, options}, globals) {
       rows
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();

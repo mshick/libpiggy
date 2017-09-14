@@ -29,10 +29,7 @@ const watchTable = function ({client, table, when, watcher, store}) {
     });
     return {client};
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

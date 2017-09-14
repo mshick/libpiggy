@@ -1,81 +1,80 @@
 import assert from 'assert';
-import isArray from 'lodash/isArray';
 import isNumber from 'lodash/isNumber';
+import map from 'lodash/fp/map';
 
-const getQueryTextGin = function ({table, columnNames, options}) {
-  const {operator} = options || {};
-
-  let jsonPath = columnNames.val;
-
-  if (operator === 'jsonb_path_ops') {
-    jsonPath = `"${columnNames.val}" jsonb_path_ops`;
-  }
-
-  return `
-    CREATE INDEX IF NOT EXISTS "${table}_${columnNames.val}_idx"
-      ON "${table}" USING gin (${jsonPath});
-  `;
+const getFieldParts = function (fieldName) {
+  // E.g., foo.bar.baz[0] -> ['foo', 'bar', 'baz', 0]
+  return fieldName.split(/[.|[]/).map(v => v.search(']') > -1 ? Number(v.replace(']', '')) : v);
 };
 
-const getQueryTextBtree = function ({table, columnNames, options}) {
-  const {fields} = options || {};
-
-  if (fields && fields.length) {
-    const indexText = fields.map(field => {
-      if (field === 'key' || field === 'val') {
-        assert.fail(false, `'key' and 'val' are not valid indexes`);
-      }
-
-      let jsonPath;
-
-      const [fieldName, fieldType] = isArray(field) ? field : [field, 'text'];
-
-      // E.g., foo.bar.baz[0] -> ['foo', 'bar', 'baz', 0]
-      const fieldPartsRaw = fieldName.split(/[.|[]/).map(v => v.search(']') > -1 ? Number(v.replace(']', '')) : v);
-      const indexName = fieldPartsRaw.join('_');
-
-      // Quote the strings
-      const fieldParts = fieldPartsRaw.map(p => isNumber(p) ? p : `'${p}'`);
-
-      if (fieldType === 'object') {
-        jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')})`;
-      }
-
-      if (fieldType === 'text' || fieldType === 'integer') {
-        const fieldLast = fieldParts.pop();
-        if (fieldParts.length) {
-          jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')} ->> ${fieldLast})`;
-        } else {
-          jsonPath = `("${columnNames.val}" ->> ${fieldLast})`;
-        }
-      }
-
-      if (fieldType === 'integer') {
-        jsonPath = `(${jsonPath}::integer)`;
-      }
-
-      return `
-        CREATE INDEX IF NOT EXISTS "${table}_${columnNames.val}_${indexName}_idx"
-          ON "${table}" (${jsonPath});
-      `;
-    });
-
-    return indexText.join('');
-  }
-
-  return '';
+const getIndexPath = function (field) {
+  const fieldParts = getFieldParts(field);
+  return fieldParts.join('_');
 };
 
-const createIndexes = async function ({client, table, ginIndex, btreeIndex, columnNames}) {
-  try {
-    let text = '';
+const getJsonPath = function (field, type, columnNames) {
+  // Quote the strings
+  const fieldPartsRaw = getFieldParts(field);
+  const fieldParts = fieldPartsRaw.map(p => isNumber(p) ? p : `'${p}'`);
 
-    if (ginIndex) {
-      text += getQueryTextGin({table, columnNames, options: ginIndex});
+  let jsonPath;
+
+  if (type === 'object') {
+    jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')})`;
+  }
+
+  if (type === 'text' || type === 'integer') {
+    const fieldLast = fieldParts.pop();
+
+    if (fieldParts.length) {
+      jsonPath = `("${columnNames.val}" -> ${fieldParts.join(' -> ')} ->> ${fieldLast})`;
+    } else {
+      jsonPath = `("${columnNames.val}" ->> ${fieldLast})`;
+    }
+  }
+
+  if (type === 'integer') {
+    jsonPath = `(${jsonPath}::integer)`;
+  }
+
+  return jsonPath;
+};
+
+const getIndexesQueryText = function ({table, columnNames, indexes}) {
+  const text = map(index => {
+    const {field, type, unique} = index;
+
+    if (field === 'key' || field === 'val') {
+      assert.fail(false, `'key' and 'val' are not valid indexes`);
     }
 
-    if (btreeIndex) {
-      text += getQueryTextBtree({table, columnNames, options: btreeIndex});
+    const indexPath = getIndexPath(field);
+    const jsonPath = getJsonPath(field, type, columnNames);
+
+    const indexName = `${table}_${columnNames.val}_${indexPath}_idx`;
+
+    return `
+      CREATE ${unique ? 'UNIQUE' : ''} INDEX IF NOT EXISTS "${indexName}"
+        ON "${table}" (${jsonPath});
+    `;
+  }, indexes);
+
+  return text.join('');
+};
+
+const createIndexes = async function (options = {}) {
+  const {client, table, indexes, columnNames} = options;
+
+  try {
+    // The primary gin index with jsonb_path_ops
+    let text = `
+      CREATE INDEX IF NOT EXISTS "${table}_${columnNames.val}_idx"
+        ON "${table}" USING gin ("${columnNames.val}" jsonb_path_ops);
+    `;
+
+    // Secondary indexes
+    if (indexes && indexes.length) {
+      text += getIndexesQueryText({table, columnNames, indexes});
     }
 
     const results = await client.query({text});
@@ -85,10 +84,7 @@ const createIndexes = async function ({client, table, ginIndex, btreeIndex, colu
       results
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

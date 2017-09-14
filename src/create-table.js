@@ -11,10 +11,7 @@ const createTable = async function ({client, table, columns}) {
       results
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

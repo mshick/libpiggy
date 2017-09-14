@@ -28,10 +28,7 @@ const createNotifyFunction = async function ({client, key}) {
       results
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

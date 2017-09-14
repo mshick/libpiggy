@@ -33,11 +33,11 @@ const CONFIG = {
 };
 
 const FIXTURES = [
-  {firstName: 'Cool', lastName: 'Foo', car: 'Prius', age: 40},
-  {firstName: 'Little', lastName: 'Guy', car: 'Rari', age: 21},
-  {firstName: 'BIG', lastName: 'Guy', car: 'Lambo', age: 22},
-  {firstName: 'Double', lastName: 'Trouble', car: 'Civic', age: 22},
-  {firstName: 'King', lastName: 'Kong', car: 'Prius', age: 30, nested: {foo: 'bar'}}
+  {firstName: 'Uzi', lastName: 'Vert', car: 'Prius', age: 40},
+  {firstName: 'Lil', lastName: 'Wayne', car: 'Rari', age: 21},
+  {firstName: 'Young', lastName: 'Thug', car: 'Lambo', age: 22},
+  {firstName: 'Gucci', lastName: 'Mane', car: 'Civic', age: 22},
+  {firstName: 'Lil', lastName: 'Yachty', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
 test.before('create connection pool', async t => {
@@ -59,9 +59,14 @@ test.beforeEach('create connection', async t => {
       index: true,
       options: {
         watch: true,
-        btreeIndex: {
-          fields: [['age', 'integer']]
-        },
+        indexes: [{
+          field: 'age',
+          type: 'integer'
+        }, {
+          field: 'lastName',
+          type: 'text',
+          unique: true
+        }],
         columnNames: {
           createdAt: 'createdAt',
           updatedAt: 'updatedAt'
@@ -220,6 +225,21 @@ test.serial('del', async t => {
     t.is(results.key, undefined);
   } catch (err) {
     t.fail(err);
+  }
+});
+
+test.serial('duplicate last name errors', async t => {
+  try {
+    const {table} = t.context;
+    const key = getRandomInt(1000, 1000000);
+    const key2 = getRandomInt(1000, 1000000);
+
+    await set({table, key, val: FIXTURES[0]});
+    await set({table, key: key2, val: FIXTURES[0]});
+
+    t.fail('should have thrown');
+  } catch (err) {
+    t.regex(err.message, /duplicate key value violates unique constraint/);
   }
 });
 

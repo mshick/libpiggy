@@ -43,10 +43,7 @@ const get = async function ({client, table, key, options, store}, globals) {
       table
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();

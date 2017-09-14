@@ -21,11 +21,7 @@ const del = async function ({client, table, key, store, options}, globals) {
       key
     };
   } catch (error) {
-    return {
-      client,
-      table,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();

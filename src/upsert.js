@@ -81,11 +81,7 @@ const upsert = async function ({
       options
     });
   } catch (error) {
-    return {
-      client,
-      table,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated && client) {
       client.close();

@@ -17,10 +17,7 @@ const tableExists = async function ({client, table, store}) {
       exists: results.rows[0].exists
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

@@ -43,10 +43,7 @@ const createWatchedTable = async function ({client, table, columns, when, key}) 
       results
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   }
 };
 

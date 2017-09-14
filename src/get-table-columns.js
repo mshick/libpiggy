@@ -24,10 +24,7 @@ const getTableColumns = async function ({client, table, options}, globals) {
       columns: results.rows
     };
   } catch (error) {
-    return {
-      client,
-      error
-    };
+    throw error;
   } finally {
     if (clientCreated) {
       client.close();
