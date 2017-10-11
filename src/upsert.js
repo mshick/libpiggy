@@ -26,6 +26,7 @@ const upsert = async function ({
   client,
   table,
   key,
+  not,
   val: newVal,
   options,
   generateKeyFn
@@ -44,7 +45,7 @@ const upsert = async function ({
     let existing;
 
     if (key) {
-      existing = await get({store, client, table, key, options});
+      existing = await get({store, client, table, key, not, options});
     }
 
     if (!existing || !existing.key) {

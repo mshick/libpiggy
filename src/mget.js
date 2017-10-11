@@ -1,6 +1,7 @@
 import isNumber from 'lodash/isNumber';
 import isString from 'lodash/isString';
 import defaultsDeep from 'lodash/defaultsDeep';
+import isUndefined from 'lodash/fp/isUndefined';
 import createClient from './create-client';
 
 const defaults = {
@@ -11,7 +12,7 @@ const defaults = {
   sort: 'desc'
 };
 
-const getQueryTextBtree = function ({table, key, columnNames}) {
+const getQueryTextBtree = function ({key, columnNames, not}) {
   const keys = Object.keys(key);
   const wheres = keys.map(k => {
     const v = key[k];
@@ -21,7 +22,11 @@ const getQueryTextBtree = function ({table, key, columnNames}) {
     return `"${columnNames.val}" ->> '${k}' = '${v}'`;
   });
 
-  return `SELECT * FROM "${table}" WHERE ${wheres.join(' AND ')}`;
+  if (not) {
+    return ` ${wheres.join(' AND NOT ')}`;
+  }
+
+  return ` ${wheres.join(' AND ')}`;
 };
 
 const getOrderByText = function ({columnNames, field, sort}) {
@@ -40,7 +45,10 @@ const getOrderByText = function ({columnNames, field, sort}) {
   return text;
 };
 
-const mget = async function ({store, client, table, key, options}, globals) {
+const mget = async function (params, globals) {
+  const {store, table, key, not, options} = params;
+  let {client} = params;
+
   let clientCreated = false;
 
   const settings = defaultsDeep({}, options, defaults);
@@ -54,14 +62,28 @@ const mget = async function ({store, client, table, key, options}, globals) {
       clientCreated = true;
     }
 
-    let text;
+    let text = `SELECT * FROM "${table}" WHERE`;
 
-    if (isString(key) || isNumber(key)) {
-      text = `SELECT * FROM "${table}" WHERE "${columnNames.key}" LIKE '${key}'`;
-    } else if (indexType === 'btree') {
-      text = getQueryTextBtree({table, key, columnNames});
-    } else {
-      text = `SELECT * FROM "${table}" WHERE "${columnNames.val}" @> '${JSON.stringify(key)}'`;
+    if (!isUndefined(key)) {
+      if (isString(key) || isNumber(key)) {
+        text += ` "${columnNames.key}" LIKE '${key}'`;
+      } else if (indexType === 'btree') {
+        text += getQueryTextBtree({key, columnNames});
+      } else {
+        text += ` "${columnNames.val}" @> '${JSON.stringify(key)}'`;
+      }
+    }
+
+    if (!isUndefined(not)) {
+      if (!isUndefined(key)) {
+        text += ` AND`;
+      }
+
+      if (isString(not) || isNumber(not)) {
+        text += ` "${columnNames.key}" NOT LIKE '${not}'`;
+      } else {
+        text += ` NOT "${columnNames.val}" @> '${JSON.stringify(not)}'`;
+      }
     }
 
     if (orderBy) {

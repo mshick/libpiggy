@@ -1,7 +1,7 @@
 import createClient from './create-client';
 import mget from './mget';
 
-const get = async function ({client, table, key, options, store}, globals) {
+const get = async function ({client, table, key, not, options, store}, globals) {
   options = options || {};
 
   let clientCreated = false;
@@ -17,6 +17,7 @@ const get = async function ({client, table, key, options, store}, globals) {
       client,
       table,
       key,
+      not,
       options: {
         ...options,
         limit: 1

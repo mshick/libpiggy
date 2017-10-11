@@ -3,7 +3,7 @@ import isUndefined from 'lodash/isUndefined';
 import createClient from './create-client';
 import get from './get';
 
-const set = async function ({store, client, table, key, val, options, generateKeyFn}, globals) {
+const set = async function ({store, client, table, key, not, val, options, generateKeyFn}, globals) {
   generateKeyFn = generateKeyFn || shortid.generate;
 
   let clientCreated = false;
@@ -30,7 +30,8 @@ const set = async function ({store, client, table, key, val, options, generateKe
       store,
       client,
       table,
-      key
+      key,
+      not
     });
   } catch (error) {
     throw error;

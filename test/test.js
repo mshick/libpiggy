@@ -188,6 +188,69 @@ test.serial('multiple orderBy statements', async t => {
   }
 });
 
+test.serial('and not statements', async t => {
+  t.plan(1);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      key: {
+        firstName: 'Lil'
+      },
+      not: {
+        car: 'Prius'
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values[0].lastName, FIXTURES[1].lastName);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
+test.serial('not statements', async t => {
+  t.plan(3);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      not: {
+        car: 'Prius'
+      },
+      options: {
+        orderBy: [{
+          field: 'lastName',
+          sort: 'asc'
+        }]
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values[0].lastName, FIXTURES[3].lastName);
+    t.is(values[1].lastName, FIXTURES[2].lastName);
+    t.is(values[2].lastName, FIXTURES[1].lastName);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
 test.serial('upsert', async t => {
   try {
     const {table} = t.context;
