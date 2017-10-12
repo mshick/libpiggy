@@ -6,20 +6,27 @@ import defaultsDeep from 'lodash/fp/defaultsDeep';
 import createClient from './create-client';
 
 const defaults = {
-  indexType: 'gin',
+  operators: 'jsonb',
   limit: 0,
   offset: 0,
   orderBy: 'updatedAt',
-  direction: 'desc'
+  direction: 'desc',
+  caseInsensitive: false
 };
 
-const getQueryTextBtree = function ({key, columnNames, not}) {
-  const keys = Object.keys(key);
+const getQueryTextJson = function ({key, not, columnNames, caseInsensitive}) {
+  const keys = Object.keys(key || not);
+
   const wheres = keys.map(k => {
     const v = key[k];
     if (isNumber(v)) {
       return `("${columnNames.val}" ->> '${k}')::int = '${v}'`;
     }
+
+    if (caseInsensitive) {
+      return `lower("${columnNames.val}" ->> '${k}') = lower('${v}')`;
+    }
+
     return `"${columnNames.val}" ->> '${k}' = '${v}'`;
   });
 
@@ -28,6 +35,20 @@ const getQueryTextBtree = function ({key, columnNames, not}) {
   }
 
   return ` ${wheres.join(' AND ')}`;
+};
+
+const getQueryTextJsonb = function ({key, not, columnNames, caseInsensitive}) {
+  key = key || not;
+
+  let text = '';
+
+  if (caseInsensitive) {
+    text += ` (lower("${columnNames.val}"::text)::jsonb) @> (lower('${JSON.stringify(key)}')::jsonb)`;
+  } else {
+    text += ` "${columnNames.val}" @> '${JSON.stringify(key)}'`;
+  }
+
+  return text;
 };
 
 const getOrderByText = function ({columnNames, field, direction}) {
@@ -54,7 +75,7 @@ const mget = async function (params, globals) {
 
   const settings = defaultsDeep(defaults, options);
 
-  const {indexType, limit, offset, orderBy, sort, direction} = settings;
+  const {operators, limit, offset, orderBy, sort, direction, caseInsensitive} = settings;
   const {columnNames} = store.settings;
 
   try {
@@ -68,10 +89,10 @@ const mget = async function (params, globals) {
     if (!isUndefined(key)) {
       if (isString(key) || isNumber(key)) {
         text += ` "${columnNames.key}" LIKE '${key}'`;
-      } else if (indexType === 'btree') {
-        text += getQueryTextBtree({key, columnNames});
+      } else if (operators === 'json') {
+        text += getQueryTextJson({key, columnNames, caseInsensitive});
       } else {
-        text += ` "${columnNames.val}" @> '${JSON.stringify(key)}'`;
+        text += getQueryTextJsonb({key, columnNames, caseInsensitive});
       }
     }
 
@@ -82,8 +103,12 @@ const mget = async function (params, globals) {
 
       if (isString(not) || isNumber(not)) {
         text += ` "${columnNames.key}" NOT LIKE '${not}'`;
+      } else if (operators === 'json') {
+        text += ` NOT`;
+        text += getQueryTextJson({not, columnNames, caseInsensitive});
       } else {
-        text += ` NOT "${columnNames.val}" @> '${JSON.stringify(not)}'`;
+        text += ` NOT`;
+        text += getQueryTextJsonb({not, columnNames, caseInsensitive});
       }
     }
 

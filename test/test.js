@@ -189,6 +189,36 @@ test.serial('multiple orderBy statements', async t => {
   }
 });
 
+test.serial('case insensitive gets', async t => {
+  t.plan(1);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      key: {
+        lastName: 'wayne'
+      },
+      options: {
+        operators: 'json',
+        caseInsensitive: true
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values[0].lastName, FIXTURES[1].lastName);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
 test.serial('and not statements', async t => {
   t.plan(1);
 
