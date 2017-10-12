@@ -75,7 +75,7 @@ const mget = async function (params, globals) {
 
   const settings = defaultsDeep(defaults, options);
 
-  const {operators, limit, offset, orderBy, sort, direction, caseInsensitive} = settings;
+  const {operators, limit, offset, orderBy, direction, caseInsensitive} = settings;
   const {columnNames} = store.settings;
 
   try {
@@ -116,18 +116,13 @@ const mget = async function (params, globals) {
       text += ` ORDER BY `;
 
       if (isString(orderBy)) {
-        text += getOrderByText({field: orderBy, direction: direction || sort, columnNames});
+        text += getOrderByText({field: orderBy, direction, columnNames});
       } else {
         text += orderBy
           .map(o => {
             if (isArray(o)) {
               return getOrderByText({field: o[0], direction: o[1], columnNames});
             }
-
-            if (o.sort) {
-              return getOrderByText({field: o.field, direction: o.sort, columnNames});
-            }
-
             return getOrderByText({...o, columnNames});
           })
           .join(', ');

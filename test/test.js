@@ -165,13 +165,10 @@ test.serial('multiple orderBy statements', async t => {
       table,
       key: '%',
       options: {
-        orderBy: [{
-          field: 'age',
-          direction: 'asc'
-        }, {
-          field: 'createdAt',
-          direction: 'desc'
-        }]
+        orderBy: [
+          ['age', 'asc'],
+          ['createdAt', 'desc']
+        ]
       }
     });
 
@@ -265,7 +262,7 @@ test.serial('not statements', async t => {
       options: {
         orderBy: [{
           field: 'lastName',
-          sort: 'asc'
+          direction: 'asc'
         }]
       }
     });
