@@ -65,7 +65,8 @@ test.beforeEach('create connection', async t => {
         }, {
           field: 'lastName',
           type: 'text',
-          unique: true
+          unique: true,
+          lower: true
         }],
         columnNames: {
           createdAt: 'createdAt',
@@ -166,10 +167,10 @@ test.serial('multiple orderBy statements', async t => {
       options: {
         orderBy: [{
           field: 'age',
-          sort: 'asc'
+          direction: 'asc'
         }, {
           field: 'createdAt',
-          sort: 'desc'
+          direction: 'desc'
         }]
       }
     });

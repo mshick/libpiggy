@@ -1,7 +1,8 @@
-import isNumber from 'lodash/isNumber';
-import isString from 'lodash/isString';
-import defaultsDeep from 'lodash/defaultsDeep';
+import isNumber from 'lodash/fp/isNumber';
+import isString from 'lodash/fp/isString';
+import isArray from 'lodash/fp/isArray';
 import isUndefined from 'lodash/fp/isUndefined';
+import defaultsDeep from 'lodash/fp/defaultsDeep';
 import createClient from './create-client';
 
 const defaults = {
@@ -9,7 +10,7 @@ const defaults = {
   limit: 0,
   offset: 0,
   orderBy: 'updatedAt',
-  sort: 'desc'
+  direction: 'desc'
 };
 
 const getQueryTextBtree = function ({key, columnNames, not}) {
@@ -29,7 +30,7 @@ const getQueryTextBtree = function ({key, columnNames, not}) {
   return ` ${wheres.join(' AND ')}`;
 };
 
-const getOrderByText = function ({columnNames, field, sort}) {
+const getOrderByText = function ({columnNames, field, direction}) {
   let text = '';
 
   if (columnNames[field]) {
@@ -38,8 +39,8 @@ const getOrderByText = function ({columnNames, field, sort}) {
     text += `"${columnNames.val}" ->> '${field}'`;
   }
 
-  if (sort) {
-    text += ` ${sort.toUpperCase()}`;
+  if (direction) {
+    text += ` ${direction.toUpperCase()}`;
   }
 
   return text;
@@ -51,9 +52,9 @@ const mget = async function (params, globals) {
 
   let clientCreated = false;
 
-  const settings = defaultsDeep({}, options, defaults);
+  const settings = defaultsDeep(defaults, options);
 
-  const {indexType, limit, offset, orderBy, sort} = settings;
+  const {indexType, limit, offset, orderBy, sort, direction} = settings;
   const {columnNames} = store.settings;
 
   try {
@@ -90,10 +91,20 @@ const mget = async function (params, globals) {
       text += ` ORDER BY `;
 
       if (isString(orderBy)) {
-        text += getOrderByText({field: orderBy, sort, columnNames});
+        text += getOrderByText({field: orderBy, direction: direction || sort, columnNames});
       } else {
         text += orderBy
-          .map(o => getOrderByText({...o, columnNames}))
+          .map(o => {
+            if (isArray(o)) {
+              return getOrderByText({field: o[0], direction: o[1], columnNames});
+            }
+
+            if (o.sort) {
+              return getOrderByText({field: o.field, direction: o.sort, columnNames});
+            }
+
+            return getOrderByText({...o, columnNames});
+          })
           .join(', ');
       }
     }

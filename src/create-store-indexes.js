@@ -42,14 +42,19 @@ const getJsonPath = function (field, type, columnNames) {
 
 const getIndexesQueryText = function ({table, columnNames, indexes}) {
   const text = map(index => {
-    const {field, type, unique} = index;
+    const {field, type, unique, lower} = index;
 
     if (field === 'key' || field === 'val') {
       assert.fail(false, `'key' and 'val' are not valid indexes`);
     }
 
     const indexPath = getIndexPath(field);
-    const jsonPath = getJsonPath(field, type, columnNames);
+
+    let jsonPath = getJsonPath(field, type, columnNames);
+
+    if (lower) {
+      jsonPath = `lower(${jsonPath})`;
+    }
 
     const indexName = `${table}_${columnNames.val}_${indexPath}_idx`;
 
