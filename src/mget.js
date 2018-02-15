@@ -1,8 +1,14 @@
+/* eslint complexity:0 */
 import isNumber from 'lodash/fp/isNumber';
 import isString from 'lodash/fp/isString';
 import isArray from 'lodash/fp/isArray';
+import isObject from 'lodash/fp/isObject';
+import isEmpty from 'lodash/fp/isEmpty';
 import isUndefined from 'lodash/fp/isUndefined';
 import defaultsDeep from 'lodash/fp/defaultsDeep';
+import pickBy from 'lodash/fp/pickBy';
+import map from 'lodash/fp/map';
+import flow from 'lodash/fp/flow';
 import createClient from './create-client';
 
 const defaults = {
@@ -14,10 +20,17 @@ const defaults = {
   caseInsensitive: false
 };
 
+const compact = pickBy(x => !isUndefined(x));
+
+const isEmptyObject = flow(
+  compact,
+  isEmpty
+);
+
 const getQueryTextJson = function ({key, not, columnNames, caseInsensitive}) {
   const keys = Object.keys(key || not);
 
-  const wheres = keys.map(k => {
+  const wheres = map(k => {
     const v = key[k];
     if (isNumber(v)) {
       return `("${columnNames.val}" ->> '${k}')::int = '${v}'`;
@@ -28,7 +41,7 @@ const getQueryTextJson = function ({key, not, columnNames, caseInsensitive}) {
     }
 
     return `"${columnNames.val}" ->> '${k}' = '${v}'`;
-  });
+  }, keys);
 
   if (not) {
     return ` ${wheres.join(' AND NOT ')}`;
@@ -68,7 +81,8 @@ const getOrderByText = function ({columnNames, field, direction}) {
 };
 
 const mget = async function (params, globals) {
-  const {store, table, key, not, options} = params;
+  const {store, table, options} = params;
+  let {key, not} = params;
   let {client} = params;
 
   let clientCreated = false;
@@ -84,15 +98,35 @@ const mget = async function (params, globals) {
       clientCreated = true;
     }
 
+    if (isObject(key) && isEmptyObject(key)) {
+      key = undefined;
+    }
+
+    if (isObject(not) && isEmptyObject(not)) {
+      not = undefined;
+    }
+
+    if (isUndefined(key) && isUndefined(not)) {
+      throw new Error('incomplete query, key or not params are required');
+    }
+
     let text = `SELECT * FROM "${table}" WHERE`;
 
     if (!isUndefined(key)) {
       if (isString(key) || isNumber(key)) {
         text += ` "${columnNames.key}" LIKE '${key}'`;
       } else if (operators === 'json') {
-        text += getQueryTextJson({key, columnNames, caseInsensitive});
+        text += getQueryTextJson({
+          key,
+          columnNames,
+          caseInsensitive
+        });
       } else {
-        text += getQueryTextJsonb({key, columnNames, caseInsensitive});
+        text += getQueryTextJsonb({
+          key,
+          columnNames,
+          caseInsensitive
+        });
       }
     }
 

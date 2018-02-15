@@ -216,6 +216,26 @@ test.serial('case insensitive gets', async t => {
   }
 });
 
+test.serial('undefined get props throws', async t => {
+  t.plan(1);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    await mget({
+      table,
+      key: {
+        lastName: undefined
+      }
+    });
+  } catch (err) {
+    t.is(err.message, 'incomplete query, key or not params are required');
+  }
+});
+
 test.serial('and not statements', async t => {
   t.plan(1);
 
