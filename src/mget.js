@@ -71,8 +71,8 @@ const getQueryTextJsonb = ({key, not, columnNames, caseInsensitive}) => {
   const search = key || not;
 
   if (isArray(search)) {
-    const wheres = map(toJsonb, search);
-    return ` (${wheres.join(' OR ')})`;
+    const facets = map(toJsonb, search);
+    return ` (${facets.join(' OR ')})`;
   }
 
   return toJsonb(search);
