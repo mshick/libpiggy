@@ -22,7 +22,7 @@ You'll need Docker and docker-compose available.
 
 ```sh
 $ docker-compose up
-$ yarn test
+$ npm test
 ```
 
 ## Requirements

@@ -27,41 +27,55 @@ const isEmptyObject = flow(
   isEmpty
 );
 
-const getQueryTextJson = function ({key, not, columnNames, caseInsensitive}) {
-  const keys = Object.keys(key || not);
+const convertToJson = (column, options = {}) => search => {
+  const [key, val] = search;
 
-  const wheres = map(k => {
-    const v = key[k];
-    if (isNumber(v)) {
-      return `("${columnNames.val}" ->> '${k}')::int = '${v}'`;
-    }
-
-    if (caseInsensitive) {
-      return `lower("${columnNames.val}" ->> '${k}') = lower('${v}')`;
-    }
-
-    return `"${columnNames.val}" ->> '${k}' = '${v}'`;
-  }, keys);
-
-  if (not) {
-    return ` ${wheres.join(' AND NOT ')}`;
+  if (isNumber(val)) {
+    return `("${column}" ->> '${key}')::int = ${val}`;
   }
 
-  return ` ${wheres.join(' AND ')}`;
+  if (options.caseInsensitive) {
+    return `lower("${column}" ->> '${key}') = lower('${val}')`;
+  }
+
+  return `"${column}" ->> '${key}' = '${val}'`;
 };
 
-const getQueryTextJsonb = function ({key, not, columnNames, caseInsensitive}) {
-  key = key || not;
+const getQueryTextJson = ({key, not, columnNames, caseInsensitive}) => {
+  const toJson = convertToJson(columnNames.val, {caseInsensitive});
+  const search = key || not;
 
-  let text = '';
-
-  if (caseInsensitive) {
-    text += ` (lower("${columnNames.val}"::text)::jsonb) @> (lower('${JSON.stringify(key)}')::jsonb)`;
-  } else {
-    text += ` "${columnNames.val}" @> '${JSON.stringify(key)}'`;
+  if (isArray(search)) {
+    const facets = map(obj => {
+      const statements = map(toJson, Object.entries(obj));
+      return `(${statements.join(' AND ')})`;
+    }, search);
+    return ` (${facets.join(' OR ')})`;
   }
 
-  return text;
+  const statements = map(toJson, Object.entries(search));
+
+  return ` (${statements.join(' AND ')})`;
+};
+
+const convertToJsonb = (column, options = {}) => search => {
+  if (options.caseInsensitive) {
+    return ` (lower("${column}"::text)::jsonb) @> (lower('${JSON.stringify(search)}')::jsonb)`;
+  }
+
+  return ` "${column}" @> '${JSON.stringify(search)}'`;
+};
+
+const getQueryTextJsonb = ({key, not, columnNames, caseInsensitive}) => {
+  const toJsonb = convertToJsonb(columnNames.val, {caseInsensitive});
+  const search = key || not;
+
+  if (isArray(search)) {
+    const wheres = map(toJsonb, search);
+    return ` (${wheres.join(' OR ')})`;
+  }
+
+  return toJsonb(search);
 };
 
 const getOrderByText = function ({columnNames, field, direction}) {

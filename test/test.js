@@ -33,11 +33,11 @@ const CONFIG = {
 };
 
 const FIXTURES = [
-  {firstName: 'Uzi', lastName: 'Vert', car: 'Prius', age: 40},
-  {firstName: 'Lil', lastName: 'Wayne', car: 'Rari', age: 21},
-  {firstName: 'Young', lastName: 'Thug', car: 'Lambo', age: 22},
-  {firstName: 'Gucci', lastName: 'Mane', car: 'Civic', age: 22},
-  {firstName: 'Lil', lastName: 'Yachty', car: 'Prius', age: 30, nested: {foo: 'bar'}}
+  {id: 1, firstName: 'Uzi', lastName: 'Vert', car: 'Prius', age: 40},
+  {id: 2, firstName: 'Lil', lastName: 'Wayne', car: 'Rari', age: 21},
+  {id: 3, firstName: 'Young', lastName: 'Thug', car: 'Lambo', age: 22},
+  {id: 4, firstName: 'Gucci', lastName: 'Mane', car: 'Civic', age: 22},
+  {id: 5, firstName: 'Lil', lastName: 'Yachty', car: 'Prius', age: 30, nested: {foo: 'bar'}}
 ];
 
 test.before('create connection pool', async t => {
@@ -236,7 +236,7 @@ test.serial('undefined get props throws', async t => {
   }
 });
 
-test.serial('and not statements', async t => {
+test.serial('key and not statements', async t => {
   t.plan(1);
 
   try {
@@ -258,6 +258,105 @@ test.serial('and not statements', async t => {
     const values = results.rows.map(row => row.val);
 
     t.is(values[0].lastName, FIXTURES[1].lastName);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
+test.serial('multiple key statements (json ops)', async t => {
+  t.plan(3);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      key: [{
+        age: 21
+      }, {
+        age: 30
+      }],
+      options: {
+        operators: 'json',
+        orderBy: [
+          ['age', 'desc']
+        ]
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values.length, 2);
+    t.is(values[0].id, FIXTURES[4].id);
+    t.is(values[1].id, FIXTURES[1].id);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
+test.serial('multiple not statements', async t => {
+  t.plan(2);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      not: [{
+        car: 'Prius'
+      }, {
+        age: 22
+      }]
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values.length, 1);
+    t.is(values[0].id, FIXTURES[1].id);
+
+    return;
+  } catch (err) {
+    throw t.fail(err);
+  }
+});
+
+test.serial('not statements', async t => {
+  t.plan(3);
+
+  try {
+    const {table} = t.context;
+    const sets = FIXTURES.map((val, key) => set({table, key, val}));
+
+    await Promise.all(sets);
+
+    const results = await mget({
+      table,
+      not: {
+        car: 'Prius'
+      },
+      options: {
+        orderBy: [{
+          field: 'lastName',
+          direction: 'asc'
+        }]
+      }
+    });
+
+    const values = results.rows.map(row => row.val);
+
+    t.is(values[0].lastName, FIXTURES[3].lastName);
+    t.is(values[1].lastName, FIXTURES[2].lastName);
+    t.is(values[2].lastName, FIXTURES[1].lastName);
 
     return;
   } catch (err) {
