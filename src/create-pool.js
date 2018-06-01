@@ -1,5 +1,6 @@
 import url from 'url';
-import defaultsDeep from 'lodash/defaultsDeep';
+import {defaultsDeep} from 'lodash/fp';
+import pgConnectionString from 'pg-connection-string';
 
 let pg;
 
@@ -35,8 +36,8 @@ const createPool = async function (options, globals) {
     const {openPools} = globals.state;
 
     if (!openPools[connectionName]) {
-      const urlConfig = urlToConfig(connectionUrl);
-      const poolConfig = defaultsDeep({}, connectionOptions, urlConfig);
+      const urlConfig = pgConnectionString.parse(connectionUrl);
+      const poolConfig = defaultsDeep(urlConfig, connectionOptions);
       openPools[connectionName] = new pg.Pool(poolConfig);
     }
 
