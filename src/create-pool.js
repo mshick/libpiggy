@@ -1,4 +1,3 @@
-import url from 'url';
 import {defaultsDeep} from 'lodash/fp';
 import pgConnectionString from 'pg-connection-string';
 
@@ -10,20 +9,6 @@ try {
 } catch (e) {
   pg = require('pg');
 }
-
-const urlToConfig = function (connectionUrl) {
-  const {hostname: host, port, pathname, auth} = url.parse(connectionUrl);
-  const [user, password] = auth ? auth.split(':') : [];
-  const [, database] = pathname ? pathname.split('/') : [];
-
-  return {
-    user,
-    password,
-    host,
-    port,
-    database
-  };
-};
 
 const createPool = async function (options, globals) {
   try {
